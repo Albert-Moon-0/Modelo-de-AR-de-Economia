@@ -5,129 +5,753 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ESCOMIA - Tu Ecosistema de Éxito</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+    
     :root {
       --ipn-color: #6a0b25;
-      --tech-blue: #1e90ff;
-      --bg-light: #f8f8f8;
-      --text-dark: #222;
-      --text-light: #fff;
+      --ipn-light: #8b1538;
+      --tech-blue: #00d4ff;
+      --tech-purple: #8b5cf6;
+      --dark-bg: #0a0a0f;
+      --card-bg: #1a1a24;
+      --text-light: #ffffff;
+      --text-gray: #a0a0b0;
+      --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
-    body { background-color: var(--bg-light); color: var(--text-dark); line-height: 1.6; }
-    section { padding: 80px 20px; text-align: center; max-width: 900px; margin: auto; }
-    h1, h2 { color: var(--ipn-color); margin-bottom: 20px; }
-    h3 { color: var(--tech-blue); margin-bottom: 15px; }
-    p { margin-bottom: 15px; font-size: 1.1em; }
-    ul { list-style: none; margin-top: 10px; }
-    li { margin: 10px 0; }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--dark-bg);
+      color: var(--text-light);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+    
+    h1, h2, h3 {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    /* Animated Background */
+    .bg-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
+    }
+    
+    .bg-animation::before {
+      content: '';
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 20% 50%, rgba(106, 11, 37, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 40% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+      animation: float 20s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(30px, -30px) rotate(5deg); }
+      66% { transform: translate(-20px, 20px) rotate(-5deg); }
+    }
+    
+    /* Header/Hero Section */
     header {
-      background: linear-gradient(to right, var(--ipn-color), var(--tech-blue));
-      color: var(--text-light);
-      padding: 100px 20px;
-    }
-    header h1 { font-size: 3em; margin-bottom: 10px; }
-    header p { font-size: 1.3em; opacity: 0.9; }
-    .cta {
-      margin-top: 30px;
-      display: inline-block;
-      padding: 15px 30px;
-      background-color: var(--tech-blue);
-      color: var(--text-light);
-      border-radius: 30px;
-      text-decoration: none;
-      font-weight: 600;
-      transition: background 0.3s;
-    }
-    .cta:hover { background-color: #1473d1; }
-    .highlight { color: var(--tech-blue); font-weight: 600; }
-    footer {
-      background-color: var(--ipn-color);
-      color: white;
-      padding: 30px 10px;
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-align: center;
+      padding: 40px 20px;
+      overflow: hidden;
     }
-    img.icon { width: 60px; margin: 10px; }
-    .pilares { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 30px; }
-    .pilar { background: white; border-radius: 10px; box-shadow: 0 3px 8px rgba(0,0,0,0.1); padding: 20px; }
-    @media (max-width: 600px) {
-      header h1 { font-size: 2em; }
-      section { padding: 60px 15px; }
+    
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 1200px;
+    }
+    
+    .hero-badge {
+      display: inline-block;
+      background: rgba(139, 92, 246, 0.2);
+      border: 1px solid var(--tech-purple);
+      color: var(--tech-purple);
+      padding: 8px 20px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 30px;
+      animation: fadeInDown 0.8s ease;
+    }
+    
+    .hero-title {
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 700;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--text-light) 0%, var(--tech-blue) 50%, var(--tech-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeInUp 1s ease;
+    }
+    
+    .hero-subtitle {
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      color: var(--text-gray);
+      margin-bottom: 20px;
+      font-weight: 500;
+      animation: fadeInUp 1.2s ease;
+    }
+    
+    .hero-quote {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      font-style: italic;
+      color: var(--tech-blue);
+      margin-bottom: 40px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeInUp 1.4s ease;
+    }
+    
+    .cta-group {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 1.6s ease;
+    }
+    
+    .cta-primary, .cta-secondary {
+      padding: 16px 40px;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .cta-primary {
+      background: linear-gradient(135deg, var(--ipn-color), var(--ipn-light));
+      color: var(--text-light);
+      box-shadow: 0 10px 30px rgba(106, 11, 37, 0.3);
+    }
+    
+    .cta-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(106, 11, 37, 0.5);
+    }
+    
+    .cta-secondary {
+      background: transparent;
+      border: 2px solid var(--tech-blue);
+      color: var(--tech-blue);
+    }
+    
+    .cta-secondary:hover {
+      background: var(--tech-blue);
+      color: var(--dark-bg);
+      transform: translateY(-3px);
+    }
+    
+    /* Floating Elements */
+    .floating-icon {
+      position: absolute;
+      font-size: 3rem;
+      opacity: 0.1;
+      animation: floatIcon 6s ease-in-out infinite;
+    }
+    
+    .floating-icon:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+    .floating-icon:nth-child(2) { top: 60%; right: 15%; animation-delay: 2s; }
+    .floating-icon:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 4s; }
+    
+    @keyframes floatIcon {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    /* Section Styles */
+    section {
+      padding: 100px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+    }
+    
+    .section-title {
+      font-size: clamp(2rem, 5vw, 3rem);
+      text-align: center;
+      margin-bottom: 60px;
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    
+    .section-title::after {
+      content: '';
+      display: block;
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--ipn-color), var(--tech-blue));
+      margin: 20px auto 0;
+      border-radius: 2px;
+    }
+    
+    /* Problem Section */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      margin-top: 50px;
+    }
+    
+    .problem-card {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .problem-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--gradient-2);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .problem-card:hover {
+      transform: translateY(-10px);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .problem-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .problem-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      display: block;
+    }
+    
+    .problem-card h3 {
+      color: var(--text-light);
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    
+    .problem-card p {
+      color: var(--text-gray);
+      line-height: 1.6;
+    }
+    
+    /* Solution Section */
+    .solution-content {
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .solution-content p {
+      font-size: 1.3rem;
+      color: var(--text-gray);
+      margin-bottom: 30px;
+    }
+    
+    .highlight {
+      color: var(--tech-blue);
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--tech-blue), var(--tech-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    /* Pilares Section */
+    .pilares-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-top: 50px;
+    }
+    
+    .pilar-card {
+      background: var(--card-bg);
+      padding: 40px 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.4s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .pilar-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    
+    .pilar-card:hover::before {
+      opacity: 1;
+    }
+    
+    .pilar-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      border-color: var(--tech-blue);
+      box-shadow: 0 20px 50px rgba(0, 212, 255, 0.2);
+    }
+    
+    .pilar-icon {
+      font-size: 3.5rem;
+      margin-bottom: 20px;
+      display: block;
+      filter: grayscale(0.3);
+      transition: filter 0.3s ease;
+    }
+    
+    .pilar-card:hover .pilar-icon {
+      filter: grayscale(0);
+    }
+    
+    .pilar-card h3 {
+      color: var(--text-light);
+      margin-bottom: 15px;
+      font-size: 1.4rem;
+    }
+    
+    .pilar-card p {
+      color: var(--text-gray);
+      line-height: 1.6;
+    }
+    
+    /* Unique Section */
+    .unique-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      margin-top: 50px;
+    }
+    
+    .unique-item {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(0, 212, 255, 0.1));
+      padding: 35px;
+      border-radius: 20px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .unique-item:hover {
+      transform: translateY(-5px);
+      border-color: var(--tech-blue);
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(0, 212, 255, 0.2));
+    }
+    
+    .unique-item h3 {
+      color: var(--tech-blue);
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    
+    .unique-item p {
+      color: var(--text-gray);
+    }
+    
+    /* Vision Timeline */
+    .timeline {
+      max-width: 800px;
+      margin: 50px auto;
+      position: relative;
+    }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--ipn-color), var(--tech-blue));
+      transform: translateX(-50%);
+    }
+    
+    .timeline-item {
+      position: relative;
+      margin-bottom: 50px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .timeline-item:nth-child(odd) {
+      flex-direction: row-reverse;
+    }
+    
+    .timeline-content {
+      width: 45%;
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .timeline-content:hover {
+      transform: scale(1.05);
+      border-color: var(--tech-blue);
+    }
+    
+    .timeline-marker {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 30px;
+      background: var(--tech-blue);
+      border: 4px solid var(--dark-bg);
+      border-radius: 50%;
+      z-index: 2;
+    }
+    
+    .timeline-content h3 {
+      color: var(--tech-blue);
+      margin-bottom: 10px;
+    }
+    
+    /* Footer */
+    footer {
+      background: linear-gradient(135deg, var(--ipn-color), #4a0519);
+      padding: 60px 20px 30px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--tech-blue), transparent);
+    }
+    
+    footer h3 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    
+    footer p {
+      font-size: 1.1rem;
+      margin-bottom: 15px;
+      color: var(--text-gray);
+    }
+    
+    footer a {
+      color: var(--tech-blue);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    
+    footer a:hover {
+      color: var(--text-light);
+    }
+    
+    /* Animations */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Scroll Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: all 0.8s ease;
+    }
+    
+    .reveal.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .timeline::before {
+        left: 20px;
+      }
+      
+      .timeline-item {
+        flex-direction: column !important;
+        align-items: flex-start;
+        padding-left: 50px;
+      }
+      
+      .timeline-content {
+        width: 100%;
+      }
+      
+      .timeline-marker {
+        left: 20px;
+      }
+      
+      .cta-group {
+        flex-direction: column;
+      }
+      
+      .cta-primary, .cta-secondary {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="bg-animation"></div>
 
-  <!-- Portada -->
+  <!-- Hero Section -->
   <header>
-    <h1>ESCOMIA</h1>
-    <p>Tu Ecosistema de Éxito en ESCOM</p>
-    <p><em>“¿Y si aplicáramos la ingeniería que aprendemos... a nuestra propia carrera universitaria?”</em></p>
-    <a href="#solucion" class="cta">Descubre ESCOMIA</a>
+    <div class="floating-icon">💻</div>
+    <div class="floating-icon">🚀</div>
+    <div class="floating-icon">⚡</div>
+    
+    <div class="hero-content">
+      <div class="hero-badge">🎓 Exclusivo para ESCOM</div>
+      <h1 class="hero-title">ESCOMIA</h1>
+      <p class="hero-subtitle">Tu Ecosistema de Éxito Universitario</p>
+      <p class="hero-quote">"¿Y si aplicáramos la ingeniería que aprendemos... a nuestra propia carrera universitaria?"</p>
+      
+      <div class="cta-group">
+        <a href="#solucion" class="cta-primary">
+          Descubre ESCOMIA →
+        </a>
+        <a href="#pilares" class="cta-secondary">
+          Ver características
+        </a>
+      </div>
+    </div>
   </header>
 
-  <!-- Problema -->
+  <!-- Problem Section -->
   <section id="problema">
-    <h2>El Viaje del Estudiante de ESCOM: Un Laberinto de Desafíos</h2>
-    <ul>
-      <li>📚 <strong>Sobrecarga Académica:</strong> Demasiado que estudiar, muy poco tiempo.</li>
-      <li>📄 <strong>Burocracia Confusa:</strong> Trámites y fechas poco claros.</li>
-      <li>⚖️ <strong>Decisiones Críticas sin Guía:</strong> Optativas, profesores, futuro.</li>
-      <li>🎓 <strong>Incertidumbre del Futuro:</strong> ¿Cómo conseguir un buen empleo?</li>
-    </ul>
-  </section>
-
-  <!-- Solución -->
-  <section id="solucion">
-    <h2>Presentamos ESCOMIA: El Mapa para el Laberinto</h2>
-    <p><span class="highlight">Centralizamos todo lo que necesitas para dominar tu carrera.</span></p>
-    <p>Una plataforma que combina inteligencia artificial y conocimiento colectivo para potenciar tu éxito estudiantil.</p>
-  </section>
-
-  <!-- Pilares -->
-  <section id="pilares">
-    <h2>Un Ecosistema, Seis Pilares Fundamentales</h2>
-    <div class="pilares">
-      <div class="pilar">🧠 <strong>IA Académica</strong><br>Resúmenes, flashcards y cuestionarios automáticos.</div>
-      <div class="pilar">👨‍🏫 <strong>Sabiduría de Cátedra</strong><br>Consejos reales de profesores y estudiantes.</div>
-      <div class="pilar">🗺 <strong>Mapa de Carrera</strong><br>Tu plan de estudios, simplificado e interactivo.</div>
-      <div class="pilar">📋 <strong>Navegador de Trámites</strong><br>Guías paso a paso para la burocracia.</div>
-      <div class="pilar">🇬🇧 <strong>Inglés Técnico</strong><br>Prepárate para el requisito y el mundo laboral.</div>
-      <div class="pilar">💼 <strong>Puente al Empleo</strong><br>Conexiones con empresas tecnológicas.</div>
+    <h2 class="section-title reveal">El Viaje del Estudiante: Un Laberinto de Desafíos</h2>
+    <div class="problem-grid">
+      <div class="problem-card reveal">
+        <span class="problem-icon">📚</span>
+        <h3>Sobrecarga Académica</h3>
+        <p>Demasiado que estudiar, muy poco tiempo para procesar toda la información.</p>
+      </div>
+      <div class="problem-card reveal">
+        <span class="problem-icon">📄</span>
+        <h3>Burocracia Confusa</h3>
+        <p>Trámites complicados y fechas poco claras que generan estrés innecesario.</p>
+      </div>
+      <div class="problem-card reveal">
+        <span class="problem-icon">⚖️</span>
+        <h3>Decisiones sin Guía</h3>
+        <p>Elegir optativas, profesores y planear tu futuro sin información clara.</p>
+      </div>
+      <div class="problem-card reveal">
+        <span class="problem-icon">🎓</span>
+        <h3>Incertidumbre del Futuro</h3>
+        <p>¿Cómo prepararte para conseguir un buen empleo en el área tech?</p>
+      </div>
     </div>
   </section>
 
-  <!-- Diferenciador -->
+  <!-- Solution Section -->
+  <section id="solucion">
+    <h2 class="section-title reveal">ESCOMIA: El Mapa para el Laberinto</h2>
+    <div class="solution-content reveal">
+      <p><span class="highlight">Centralizamos todo lo que necesitas para dominar tu carrera universitaria.</span></p>
+      <p>Una plataforma que combina inteligencia artificial y conocimiento colectivo para potenciar tu éxito estudiantil en ESCOM.</p>
+    </div>
+  </section>
+
+  <!-- Pilares Section -->
+  <section id="pilares">
+    <h2 class="section-title reveal">Un Ecosistema, Seis Pilares Fundamentales</h2>
+    <div class="pilares-grid">
+      <div class="pilar-card reveal">
+        <span class="pilar-icon">🧠</span>
+        <h3>IA Académica</h3>
+        <p>Resúmenes inteligentes, flashcards automáticas y cuestionarios personalizados que se adaptan a tu ritmo de aprendizaje.</p>
+      </div>
+      <div class="pilar-card reveal">
+        <span class="pilar-icon">👨‍🏫</span>
+        <h3>Sabiduría de Cátedra</h3>
+        <p>Consejos reales de profesores y estudiantes. Conoce qué esperar de cada materia y profesor antes de inscribirte.</p>
+      </div>
+      <div class="pilar-card reveal">
+        <span class="pilar-icon">🗺️</span>
+        <h3>Mapa de Carrera</h3>
+        <p>Tu plan de estudios simplificado e interactivo. Visualiza tu progreso y planea tu camino hacia la graduación.</p>
+      </div>
+      <div class="pilar-card reveal">
+        <span class="pilar-icon">📋</span>
+        <h3>Navegador de Trámites</h3>
+        <p>Guías paso a paso para todos los trámites administrativos. Nunca más te pierdas una fecha importante.</p>
+      </div>
+      <div class="pilar-card reveal">
+        <span class="pilar-icon">🇬🇧</span>
+        <h3>Inglés Técnico</h3>
+        <p>Prepárate para el requisito de inglés y el mundo laboral con recursos especializados en tecnología.</p>
+      </div>
+      <div class="pilar-card reveal">
+        <span class="pilar-icon">💼</span>
+        <h3>Puente al Empleo</h3>
+        <p>Conexiones directas con empresas tecnológicas, bolsa de trabajo y preparación para entrevistas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Unique Section -->
   <section id="magia">
-    <h2>¿Qué Nos Hace Únicos?</h2>
-    <p>Comunidad ESCOM + Inteligencia Artificial = Éxito Personalizado</p>
-    <ul>
-      <li><strong>Hiper-enfocado:</strong> Hecho por y para la comunidad de ESCOM.</li>
-      <li><strong>Inteligencia Colectiva:</strong> La plataforma aprende con los usuarios.</li>
-      <li><strong>Solución 360°:</strong> Te acompaña en toda tu vida universitaria.</li>
-    </ul>
+    <h2 class="section-title reveal">¿Qué Nos Hace Únicos?</h2>
+    <div class="unique-grid">
+      <div class="unique-item reveal">
+        <h3>🎯 Hiper-enfocado</h3>
+        <p>Hecho por y para la comunidad de ESCOM. Conocemos tus necesidades específicas.</p>
+      </div>
+      <div class="unique-item reveal">
+        <h3>🤝 Inteligencia Colectiva</h3>
+        <p>La plataforma aprende y mejora con cada usuario. Tu experiencia ayuda a los demás.</p>
+      </div>
+      <div class="unique-item reveal">
+        <h3>🌐 Solución 360°</h3>
+        <p>Te acompañamos en toda tu vida universitaria, desde el primer semestre hasta tu primer empleo.</p>
+      </div>
+    </div>
   </section>
 
-  <!-- Visión -->
+  <!-- Vision Section -->
   <section id="futuro">
-    <h2>Más Allá de ESCOM: Un Modelo de Éxito</h2>
-    <p>Fase 1: Consolidar en ESCOM.</p>
-    <p>Fase 2: Expandir al IPN.</p>
-    <p>Fase 3: Llevar el modelo a universidades de todo México.</p>
+    <h2 class="section-title reveal">Más Allá de ESCOM: Un Modelo de Éxito</h2>
+    <div class="timeline">
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <h3>Fase 1: ESCOM</h3>
+          <p>Consolidar la plataforma con la comunidad de ESCOM, perfeccionando cada funcionalidad.</p>
+        </div>
+        <div class="timeline-marker"></div>
+      </div>
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <h3>Fase 2: IPN</h3>
+          <p>Expandir el ecosistema a todas las escuelas del Instituto Politécnico Nacional.</p>
+        </div>
+        <div class="timeline-marker"></div>
+      </div>
+      <div class="timeline-item reveal">
+        <div class="timeline-content">
+          <h3>Fase 3: Nacional</h3>
+          <p>Llevar el modelo a universidades tecnológicas de todo México.</p>
+        </div>
+        <div class="timeline-marker"></div>
+      </div>
+    </div>
   </section>
 
-  <!-- Llamada a la acción -->
+  <!-- CTA Section -->
   <section id="accion">
-    <h2>Únete a la Revolución</h2>
-    <p>Regístrate para ser parte del futuro de la educación en ESCOM.</p>
-    <a href="#" class="cta">¡Quiero unirme!</a>
+    <div class="solution-content reveal">
+      <h2 class="section-title">Únete a la Revolución</h2>
+      <p>Sé parte del futuro de la educación en ESCOM. Regístrate ahora y comienza a transformar tu experiencia universitaria.</p>
+      <div class="cta-group">
+        <a href="#" class="cta-primary">¡Quiero unirme! 🚀</a>
+      </div>
+    </div>
   </section>
 
-  <!-- Agradecimiento -->
+  <!-- Footer -->
   <footer>
-    <h3>¿Preguntas?</h3>
-    <p>Gracias por tu atención 🌟</p>
-    <p>Contacto: <a href="mailto:contacto@escomia.mx" style="color:#fff;">contacto@escomia.mx</a></p>
+    <h3>¿Tienes preguntas?</h3>
+    <p>Estamos aquí para ayudarte 🌟</p>
+    <p>Contacto: <a href="mailto:contacto@escomia.mx">contacto@escomia.mx</a></p>
+    <p style="margin-top: 30px; font-size: 0.9rem; opacity: 0.7;">© 2025 ESCOMIA - Hecho con 💜 por estudiantes de ESCOM</p>
   </footer>
 
+  <script>
+    // Scroll Reveal Animation
+    function reveal() {
+      const reveals = document.querySelectorAll('.reveal');
+      reveals.forEach(element => {
+        const windowHeight = window.innerHeight;
+        const elementTop = element.getBoundingClientRect().top;
+        const elementVisible = 150;
+        
+        if (elementTop < windowHeight - elementVisible) {
+          element.classList.add('active');
+        }
+      });
+    }
+    
+    window.addEventListener('scroll', reveal);
+    reveal(); // Initial check
+    
+    // Smooth Scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
