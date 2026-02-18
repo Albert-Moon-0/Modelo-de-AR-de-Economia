@@ -5,42 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AR Economía</title>
 
-  <!-- A-Frame -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
-
-  <!-- AR.js (para marcador HIRO) -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
-
-  <!-- MindAR.js (para imagen personalizada) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --cyan: #00d4ff;
+      --cyan:   #00d4ff;
       --purple: #7b2fff;
-      --red: #ff4466;
-      --green: #00ff88;
-      --gold: #ffcc00;
+      --green:  #00ff88;
+      --gold:   #ffcc00;
+      --red:    #ff4466;
+      --bg:     #07080f;
     }
 
-    body { font-family: 'Segoe UI', sans-serif; background: #07080f; overflow: hidden; }
+    body { font-family: 'Segoe UI', sans-serif; background: var(--bg); overflow: hidden; color: #fff; }
 
-    /* ── SPLASH ── */
+    /* ══ SPLASH ══════════════════════════════════════════════ */
     #splash {
       position: fixed; inset: 0; z-index: 9999;
-      background: radial-gradient(ellipse at 30% 40%, #0d1f3c, #07080f 60%),
-                  radial-gradient(ellipse at 80% 70%, #1a0a2e, transparent 60%);
+      background: radial-gradient(ellipse at 25% 35%, #0d1f3c, transparent 60%),
+                  radial-gradient(ellipse at 80% 70%, #1a0a2e, transparent 55%),
+                  #07080f;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 18px; padding: 32px; text-align: center;
+      gap: 16px; padding: 28px; text-align: center;
       transition: opacity 0.5s;
     }
     #splash.hidden { opacity: 0; pointer-events: none; }
 
     #splash h1 {
-      font-size: clamp(2rem, 7vw, 3.5rem); font-weight: 900; letter-spacing: -2px;
+      font-size: clamp(1.9rem, 6vw, 3.2rem); font-weight: 900; letter-spacing: -2px;
       background: linear-gradient(90deg, var(--cyan), var(--purple), var(--cyan));
       background-size: 200%;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -48,138 +45,205 @@
     }
     @keyframes shimmer { to { background-position: 200% center; } }
 
-    #splash > p { color: #777; font-size: 0.95rem; max-width: 360px; line-height: 1.6; }
+    #splash .tagline { color: #555; font-size: 0.88rem; max-width: 320px; line-height: 1.55; }
+
+    /* Chips de categoría en el splash */
+    .category-chips {
+      display: flex; flex-wrap: wrap; gap: 7px; justify-content: center;
+      max-width: 380px;
+    }
+    .chip {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px; padding: 5px 13px;
+      font-size: 0.73rem; color: #888;
+    }
 
     /* Selector de modo */
     .mode-grid {
       display: grid; grid-template-columns: 1fr 1fr;
-      gap: 12px; width: 100%; max-width: 400px; margin-top: 4px;
+      gap: 10px; width: 100%; max-width: 380px;
     }
     .mode-card {
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 18px; padding: 20px 14px;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 16px; padding: 18px 12px;
       cursor: pointer; transition: all 0.25s; text-align: center;
     }
     .mode-card:hover, .mode-card.selected {
       border-color: var(--cyan);
       background: rgba(0,212,255,0.07);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 28px rgba(0,212,255,0.12);
+      transform: translateY(-2px);
     }
-    .mode-card .icon { font-size: 1.9rem; display: block; margin-bottom: 8px; }
-    .mode-card h3 { color: #fff; font-size: 0.9rem; margin-bottom: 4px; }
-    .mode-card p { color: #555; font-size: 0.73rem; line-height: 1.45; }
+    .mode-card .icon { font-size: 1.7rem; display: block; margin-bottom: 7px; }
+    .mode-card h3 { color: #fff; font-size: 0.87rem; margin-bottom: 3px; }
+    .mode-card p  { color: #555; font-size: 0.7rem; line-height: 1.4; }
 
-    /* Aviso MindAR */
     #mindar-notice {
-      background: rgba(255,204,0,0.07);
-      border: 1px solid rgba(255,204,0,0.22);
-      border-radius: 12px; padding: 13px 16px;
-      color: #bbb; font-size: 0.8rem; line-height: 1.65;
-      max-width: 370px; display: none;
+      background: rgba(255,204,0,0.06);
+      border: 1px solid rgba(255,204,0,0.2);
+      border-radius: 12px; padding: 12px 15px;
+      color: #aaa; font-size: 0.78rem; line-height: 1.65;
+      max-width: 360px; display: none;
     }
     #mindar-notice strong { color: var(--gold); }
     #mindar-notice a { color: var(--cyan); }
 
-    /* Botón arrancar */
     .start-btn {
       background: linear-gradient(135deg, var(--cyan), var(--purple));
       border: none; border-radius: 50px;
-      color: #fff; font-size: 1rem; font-weight: 700;
-      padding: 14px 44px; cursor: pointer;
-      box-shadow: 0 0 30px rgba(0,212,255,0.25);
+      color: #fff; font-size: 0.95rem; font-weight: 700;
+      padding: 13px 42px; cursor: pointer;
+      box-shadow: 0 0 28px rgba(0,212,255,0.22);
       transition: transform 0.2s, box-shadow 0.2s;
-      width: 100%; max-width: 300px;
+      width: 100%; max-width: 280px;
     }
-    .start-btn:hover { transform: scale(1.04); box-shadow: 0 0 50px rgba(0,212,255,0.45); }
+    .start-btn:hover { transform: scale(1.04); box-shadow: 0 0 46px rgba(0,212,255,0.4); }
 
     .link-marcadores {
-      color: #444; font-size: 0.8rem; text-decoration: none;
-      border-bottom: 1px dashed #333; padding-bottom: 2px;
-      transition: color 0.2s;
+      color: #444; font-size: 0.78rem; text-decoration: none;
+      border-bottom: 1px dashed #333; padding-bottom: 2px; transition: color 0.2s;
     }
     .link-marcadores:hover { color: var(--cyan); }
 
-    /* ── HUD ── */
+    /* ══ HUD ══════════════════════════════════════════════════ */
     #hud {
       position: fixed; top: 0; left: 0; right: 0; z-index: 500;
-      background: linear-gradient(180deg, rgba(7,8,15,0.85), transparent);
-      padding: 12px 18px; display: none;
-      align-items: center; justify-content: space-between;
+      background: linear-gradient(180deg, rgba(7,8,15,0.88), transparent);
+      padding: 11px 16px; display: none;
+      align-items: center; justify-content: space-between; gap: 8px;
     }
-    .hud-logo { color: var(--cyan); font-weight: 900; font-size: 1rem; letter-spacing: 1px; }
+    .hud-logo { color: var(--cyan); font-weight: 900; font-size: 0.95rem; letter-spacing: 1px; white-space: nowrap; }
     .hud-status {
-      color: #fff; font-size: 0.78rem;
-      background: rgba(123,47,255,0.35);
-      border: 1px solid rgba(123,47,255,0.6);
-      border-radius: 20px; padding: 3px 12px; transition: all 0.3s;
+      font-size: 0.75rem;
+      background: rgba(123,47,255,0.3); border: 1px solid rgba(123,47,255,0.55);
+      border-radius: 20px; padding: 3px 11px; transition: all 0.3s; white-space: nowrap;
     }
-    .hud-status.found { background: rgba(0,212,255,0.12); border-color: var(--cyan); }
+    .hud-status.found { background: rgba(0,212,255,0.1); border-color: var(--cyan); }
 
-    /* ── OVERLAY DE CONCEPTOS ── */
+    /* ══ SCAN HINT ════════════════════════════════════════════ */
+    #scan-hint {
+      position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+      z-index: 300; text-align: center; display: none; pointer-events: none;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+    #scan-hint .scan-icon { font-size: 2rem; display: block; margin-bottom: 4px; }
+    #scan-hint p { color: rgba(255,255,255,0.5); font-size: 0.78rem; }
+
+    /* ══ PANEL OVERLAY ════════════════════════════════════════ */
     #concept-overlay {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
       display: none; flex-direction: column; pointer-events: none;
     }
+
     #concept-card {
-      margin: 0 12px 14px;
-      background: rgba(7,8,15,0.93);
-      border: 1px solid rgba(0,212,255,0.2);
-      border-radius: 20px; padding: 20px 22px 16px;
-      backdrop-filter: blur(16px);
+      margin: 0 10px 12px;
+      background: rgba(5,6,12,0.95);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 22px; overflow: hidden;
+      backdrop-filter: blur(20px);
       pointer-events: all;
-      animation: slideUp 0.35s ease;
+      animation: slideUp 0.3s ease;
+      display: flex; flex-direction: column;
+      max-height: 58vh;
     }
-    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } }
+    @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } }
 
-    .concept-title { font-size: 1.05rem; font-weight: 800; color: var(--cyan); margin-bottom: 8px; }
-    .concept-body  { font-size: 0.82rem; color: #bbb; line-height: 1.65; }
+    /* Cabecera del card (categoría + título) */
+    .card-header {
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .card-category {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; margin-bottom: 4px;
+      opacity: 0.85;
+    }
+    .card-title {
+      font-size: 1.05rem; font-weight: 800; line-height: 1.2;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title .title-icon { font-size: 1.3rem; }
 
-    .concept-nav {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-top: 14px; gap: 10px; pointer-events: all;
+    /* Cuerpo scrolleable */
+    .card-body {
+      padding: 12px 18px 10px;
+      overflow-y: auto; flex: 1;
+      font-size: 0.82rem; color: #b0b8c8; line-height: 1.72;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+    .card-body::-webkit-scrollbar { width: 4px; }
+    .card-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    /* Elementos especiales dentro del body */
+    .card-body b  { font-weight: 700; }
+    .card-body .highlight-box {
+      background: rgba(255,255,255,0.04);
+      border-left: 3px solid;
+      border-radius: 0 8px 8px 0;
+      padding: 8px 12px; margin: 8px 0;
+      font-size: 0.8rem;
+    }
+    .card-body ul {
+      list-style: none; padding: 0; margin: 6px 0;
+    }
+    .card-body ul li {
+      padding: 3px 0 3px 16px; position: relative;
+    }
+    .card-body ul li::before {
+      content: '▸'; position: absolute; left: 0;
+      opacity: 0.6;
+    }
+
+    /* Barra de navegación */
+    .card-nav {
+      padding: 10px 14px 12px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
     }
     .nav-btn {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px; color: #bbb; font-size: 0.78rem;
-      padding: 8px 14px; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+      border-radius: 10px; color: #aaa; font-size: 0.75rem;
+      padding: 7px 13px; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
     }
-    .nav-btn:hover { background: rgba(0,212,255,0.12); border-color: var(--cyan); color: #fff; }
-    .nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+    .nav-btn:hover { background: rgba(0,212,255,0.1); border-color: var(--cyan); color: #fff; }
+    .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
-    .concept-counter { color: #444; font-size: 0.78rem; flex: 1; text-align: center; }
-
-    .concept-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 6px; }
-    .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: all 0.3s; }
-    .dot.active { background: var(--cyan); transform: scale(1.35); }
-
-    /* Hint de escaneo */
-    #scan-hint {
-      position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%);
-      z-index: 300; text-align: center;
-      animation: pulse 2s ease-in-out infinite; display: none; pointer-events: none;
+    .nav-center { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .concept-dots { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; max-width: 180px; }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); transition: all 0.3s;
+      cursor: pointer;
     }
-    @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
-    #scan-hint .scan-icon { font-size: 2rem; display: block; margin-bottom: 4px; }
-    #scan-hint p { color: rgba(255,255,255,0.55); font-size: 0.8rem; }
+    .dot.active { transform: scale(1.4); }
+    .nav-counter { color: #444; font-size: 0.72rem; }
 
-    /* ── ESCENAS AR ── */
+    /* ══ ESCENAS ══════════════════════════════════════════════ */
     #scene-arjs, #scene-mindar {
-      position: fixed; inset: 0; z-index: 1; display: none;
-      width: 100%; height: 100%;
+      position: fixed; inset: 0; z-index: 1;
+      display: none; width: 100%; height: 100%;
     }
   </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     SPLASH
-═══════════════════════════════════════ -->
+<!-- ═══════════════════════ SPLASH ═══════════════════════════ -->
 <div id="splash">
   <h1>AR Economía</h1>
-  <p>Elige cómo quieres activar la realidad aumentada:</p>
+  <p class="tagline">Fundamentos de economía en realidad aumentada — 22 conceptos</p>
+
+  <div class="category-chips">
+    <span class="chip">🔍 Problemas</span>
+    <span class="chip">📦 Escasez</span>
+    <span class="chip">🏷️ Bienes</span>
+    <span class="chip">⚙️ Valores</span>
+    <span class="chip">🔬 Ciencias</span>
+    <span class="chip">🛠️ Técnica</span>
+  </div>
 
   <div class="mode-grid">
     <div class="mode-card selected" id="card-hiro" onclick="selectMode('hiro')">
@@ -195,12 +259,10 @@
   </div>
 
   <div id="mindar-notice">
-    <strong>⚠️ Pasos para usar imagen propia:</strong><br>
-    1. Sube tu imagen en
-    <a href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">este compilador</a><br>
-    2. Descarga el archivo <code>.mind</code> generado<br>
-    3. Ponlo en la carpeta del proyecto con el nombre <code>marcador.mind</code><br>
-    4. ¡Listo! Apunta la cámara a esa imagen.
+    <strong>⚠️ Para usar imagen propia:</strong><br>
+    1. Compila tu imagen en <a href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">este enlace</a><br>
+    2. Descarga el <code>.mind</code>, renómbralo <code>marcador.mind</code><br>
+    3. Súbelo al repositorio junto con <code>index.html</code>
   </div>
 
   <button class="start-btn" onclick="iniciarAR()">📷 Iniciar Cámara</button>
@@ -211,9 +273,7 @@
 </div>
 
 
-<!-- ═══════════════════════════════════════
-     HUD
-═══════════════════════════════════════ -->
+<!-- ═══════════════════════ HUD ══════════════════════════════ -->
 <div id="hud">
   <span class="hud-logo">📊 AR ECON</span>
   <span class="hud-status" id="hud-status">Buscando marcador…</span>
@@ -225,26 +285,30 @@
 </div>
 
 
-<!-- ═══════════════════════════════════════
-     PANEL OVERLAY DE CONCEPTOS
-═══════════════════════════════════════ -->
+<!-- ═══════════════════════ PANEL OVERLAY ════════════════════ -->
 <div id="concept-overlay">
   <div id="concept-card">
-    <div class="concept-dots" id="dots"></div>
-    <div class="concept-title" id="c-title"></div>
-    <div class="concept-body"  id="c-body"></div>
-    <div class="concept-nav">
-      <button class="nav-btn" id="btn-prev" onclick="cambiarConcepto(-1)">← Anterior</button>
-      <span class="concept-counter" id="c-counter"></span>
-      <button class="nav-btn" id="btn-next" onclick="cambiarConcepto(1)">Siguiente →</button>
+    <div class="card-header">
+      <div class="card-category" id="c-category"></div>
+      <div class="card-title">
+        <span class="title-icon" id="c-icon"></span>
+        <span id="c-title"></span>
+      </div>
+    </div>
+    <div class="card-body" id="c-body"></div>
+    <div class="card-nav">
+      <button class="nav-btn" id="btn-prev" onclick="cambiarConcepto(-1)">←</button>
+      <div class="nav-center">
+        <div class="concept-dots" id="dots"></div>
+        <span class="nav-counter" id="c-counter"></span>
+      </div>
+      <button class="nav-btn" id="btn-next" onclick="cambiarConcepto(1)">→</button>
     </div>
   </div>
 </div>
 
 
-<!-- ═══════════════════════════════════════
-     MODO A — AR.js + marcador HIRO
-═══════════════════════════════════════ -->
+<!-- ═══════════════════════ MODO A — AR.js + HIRO ═══════════ -->
 <a-scene id="scene-arjs"
   embedded
   arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
@@ -253,251 +317,487 @@
 
   <a-marker preset="hiro" id="marker-hiro">
 
-    <!-- Plataforma giratoria -->
-    <a-cylinder color="#00d4ff" opacity="0.15"
-      radius="0.85" height="0.04" position="0 0 0"
-      animation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear">
+    <a-cylinder color="#00d4ff" opacity="0.12"
+      radius="0.9" height="0.04"
+      animation="property: rotation; to: 0 360 0; dur: 9000; loop: true; easing: linear">
     </a-cylinder>
 
-    <!-- Icono central del concepto actual -->
-    <a-text id="ar-icon-hiro" value="📈"
-      align="center" width="3"
-      position="0 0.55 0" rotation="-90 0 0"
-      scale="1.5 1.5 1.5">
+    <a-text id="ar-icon-hiro" value="🔍"
+      align="center" width="3" position="0 0.6 0"
+      rotation="-90 0 0" scale="1.6 1.6 1.6">
     </a-text>
 
-    <!-- Anillo exterior -->
-    <a-torus color="#7b2fff" opacity="0.55"
-      radius="0.95" radius-tubular="0.025"
+    <a-torus color="#7b2fff" opacity="0.5"
+      radius="0.98" radius-tubular="0.022"
       position="0 0.06 0"
-      animation="property: rotation; to: 0 360 0; dur: 11000; loop: true; easing: linear">
+      animation="property: rotation; to: 0 360 0; dur: 13000; loop: true; easing: linear">
     </a-torus>
 
-    <!-- Esferas orbitando -->
     <a-entity animation="property: rotation; to: 0 360 0; dur: 5000; loop: true; easing: linear">
-      <a-sphere color="#00d4ff" radius="0.07" position="1 0.3 0" opacity="0.85"></a-sphere>
+      <a-sphere color="#00d4ff" radius="0.065" position="1.05 0.3 0" opacity="0.8"></a-sphere>
     </a-entity>
-    <a-entity animation="property: rotation; to: 0 -360 0; dur: 7200; loop: true; easing: linear">
-      <a-sphere color="#ff4466" radius="0.055" position="0.82 0.5 0" opacity="0.75"></a-sphere>
+    <a-entity animation="property: rotation; to: 0 -360 0; dur: 7500; loop: true; easing: linear">
+      <a-sphere color="#ff4466" radius="0.05" position="0.85 0.5 0" opacity="0.7"></a-sphere>
     </a-entity>
-    <a-entity animation="property: rotation; to: 0 360 0; dur: 9000; loop: true; easing: linear">
-      <a-sphere color="#ffcc00" radius="0.06" position="0.7 0.2 0" opacity="0.8"></a-sphere>
+    <a-entity animation="property: rotation; to: 0 360 0; dur: 9500; loop: true; easing: linear">
+      <a-sphere color="#ffcc00" radius="0.055" position="0.72 0.22 0" opacity="0.8"></a-sphere>
     </a-entity>
 
   </a-marker>
-
   <a-entity camera></a-entity>
 </a-scene>
 
 
-<!-- ═══════════════════════════════════════
-     MODO B — MindAR + imagen personalizada
-
-     INSTRUCCIONES:
-     1. Ve a https://hiukim.github.io/mind-ar-js-doc/tools/compile
-     2. Sube tu imagen (portada, infografía, etc.)
-     3. Descarga el .mind generado
-     4. Renómbralo "marcador.mind" y ponlo en la misma carpeta que index.html
-     5. ¡Eso es todo! El código ya lo usa automáticamente.
-═══════════════════════════════════════ -->
+<!-- ═══════════════════════ MODO B — MindAR ═════════════════ -->
 <a-scene id="scene-mindar"
   mindar-image="imageTargetSrc: marcador.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes;"
-  color-space="sRGB"
-  renderer="colorManagement: true"
-  vr-mode-ui="enabled: false"
-  device-orientation-permission-ui="enabled: false">
+  color-space="sRGB" renderer="colorManagement: true"
+  vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
   <a-entity mindar-image-target="targetIndex: 0">
-
-    <!-- Plataforma giratoria -->
-    <a-cylinder color="#7b2fff" opacity="0.15"
-      radius="0.6" height="0.03" position="0 0 0"
-      animation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear">
+    <a-cylinder color="#7b2fff" opacity="0.12" radius="0.65" height="0.03"
+      animation="property: rotation; to: 0 360 0; dur: 9000; loop: true; easing: linear">
     </a-cylinder>
-
-    <!-- Icono central -->
-    <a-text id="ar-icon-mindar" value="📈"
-      align="center" width="3"
-      position="0 0.5 0" rotation="0 0 0"
-      scale="1.5 1.5 1.5">
+    <a-text id="ar-icon-mindar" value="🔍"
+      align="center" width="3" position="0 0.5 0" scale="1.6 1.6 1.6">
     </a-text>
-
-    <!-- Anillo -->
-    <a-torus color="#00d4ff" opacity="0.5"
-      radius="0.78" radius-tubular="0.022"
-      position="0 0.04 0"
-      animation="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear">
+    <a-torus color="#00d4ff" opacity="0.45" radius="0.82" radius-tubular="0.02"
+      animation="property: rotation; to: 0 360 0; dur: 11000; loop: true; easing: linear">
     </a-torus>
-
-    <!-- Esferas orbitando -->
     <a-entity animation="property: rotation; to: 0 360 0; dur: 5200; loop: true; easing: linear">
-      <a-sphere color="#7b2fff" radius="0.06" position="0.85 0.25 0" opacity="0.9"></a-sphere>
+      <a-sphere color="#7b2fff" radius="0.058" position="0.88 0.28 0" opacity="0.85"></a-sphere>
     </a-entity>
-    <a-entity animation="property: rotation; to: 0 -360 0; dur: 7600; loop: true; easing: linear">
-      <a-sphere color="#ffcc00" radius="0.055" position="0.72 0.4 0" opacity="0.8"></a-sphere>
+    <a-entity animation="property: rotation; to: 0 -360 0; dur: 7800; loop: true; easing: linear">
+      <a-sphere color="#ffcc00" radius="0.05" position="0.74 0.42 0" opacity="0.8"></a-sphere>
     </a-entity>
-
   </a-entity>
 </a-scene>
 
 
-<!-- ═══════════════════════════════════════
-     JAVASCRIPT
-═══════════════════════════════════════ -->
+<!-- ═══════════════════════ JAVASCRIPT ══════════════════════ -->
 <script>
 
-  // ══════════════════════════════════════════════════════════════
-  //  CONCEPTOS DE ECONOMÍA
-  //  ↓ Edita aquí para agregar o modificar tus temas ↓
-  // ══════════════════════════════════════════════════════════════
-  const CONCEPTOS = [
-    {
-      titulo: "📈 Oferta y Demanda",
-      cuerpo: `La <b style="color:#00d4ff">Ley de Demanda</b>: a mayor precio, menor cantidad demandada.<br><br>
-               La <b style="color:#00ff88">Ley de Oferta</b>: a mayor precio, mayor cantidad ofrecida.<br><br>
-               El <b style="color:#ffcc00">Equilibrio</b> es el punto donde ambas fuerzas se igualan.`,
-      icon: "📈"
-    },
-    {
-      titulo: "💸 Inflación",
-      cuerpo: `Aumento generalizado y sostenido en el nivel de precios.<br><br>
-               Se mide con el <b style="color:#ffcc00">IPC</b> (Índice de Precios al Consumidor).<br><br>
-               Causas: exceso de dinero en circulación, aumento de costos o mayor demanda.`,
-      icon: "💸"
-    },
-    {
-      titulo: "🏦 PIB",
-      cuerpo: `El <b style="color:#00d4ff">Producto Interno Bruto</b> mide el valor total de bienes y servicios producidos en un país.<br><br>
-               <b style="color:#00ff88">PIB = C + I + G + (X − M)</b><br><br>
-               C=consumo · I=inversión · G=gasto público · X=exportaciones · M=importaciones`,
-      icon: "🏦"
-    },
-    {
-      titulo: "⚖️ Política Fiscal",
-      cuerpo: `Uso del <b style="color:#00d4ff">gasto público</b> y los <b style="color:#ff4466">impuestos</b> para influir en la economía.<br><br>
-               <b style="color:#00ff88">Expansiva:</b> más gasto / menos impuestos → estimula el crecimiento.<br><br>
-               <b style="color:#ff4466">Contractiva:</b> menos gasto / más impuestos → enfría la economía.`,
-      icon: "⚖️"
-    },
-    // ── Agrega aquí más conceptos con el mismo formato ──────────
-    // {
-    //   titulo: "🔄 Tu concepto",
-    //   cuerpo: `Explicación del concepto.<br><br>Más detalles aquí.`,
-    //   icon: "🔄"
-    // },
-  ];
-  // ══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+//  CONCEPTOS DE ECONOMÍA
+//  Cada objeto tiene: categoria, titulo, icon, color (para el acento) y cuerpo (HTML)
+// ════════════════════════════════════════════════════════════════
+const CONCEPTOS = [
 
-  let modo = 'hiro';
-  let conceptoActual = 0;
+  // ── BLOQUE 1: TIPOS DE PROBLEMAS ─────────────────────────────
+  {
+    categoria: "🔍 Tipos de Problemas",
+    titulo: "Problema",
+    icon: "⚠️",
+    color: "#ff4466",
+    cuerpo: `Situación en la que existe una <b style="color:#ff4466">dificultad o necesidad</b> que requiere una solución.
+             <div class="highlight-box" style="border-color:#ff4466; color:#ccc;">
+               Puede ser de naturaleza <b>técnica</b>, <b>social</b> o <b>económica</b> según el ámbito en que se presente.
+             </div>`
+  },
+  {
+    categoria: "🔍 Tipos de Problemas",
+    titulo: "Problema Técnico",
+    icon: "🔧",
+    color: "#ff8844",
+    cuerpo: `Dificultad relacionada con el <b style="color:#ff8844">cómo hacer</b> algo.
+             <div class="highlight-box" style="border-color:#ff8844; color:#ccc;">
+               Se enfoca en los <b>medios, procedimientos o tecnología</b> disponibles para lograr un fin específico.
+             </div>
+             Se resuelve mediante la aplicación de <b>técnica</b> o <b>ingeniería</b>.`
+  },
+  {
+    categoria: "🔍 Tipos de Problemas",
+    titulo: "Problema Económico",
+    icon: "💡",
+    color: "#ffcc00",
+    cuerpo: `Surge cuando los <b style="color:#ffcc00">recursos son limitados</b> y es necesario decidir cómo usarlos.
+             <div class="highlight-box" style="border-color:#ffcc00; color:#ccc;">
+               La tensión fundamental: <b>recursos escasos</b> vs. <b>necesidades ilimitadas</b>.
+             </div>
+             Toda sociedad enfrenta este problema y debe responder: <b>¿qué producir?</b>, <b>¿cómo?</b> y <b>¿para quién?</b>`
+  },
 
-  // ── Selección de modo ────────────────────────────────────────
-  function selectMode(m) {
-    modo = m;
-    document.getElementById('card-hiro').classList.toggle('selected', m === 'hiro');
-    document.getElementById('card-mindar').classList.toggle('selected', m === 'mindar');
-    document.getElementById('mindar-notice').style.display = m === 'mindar' ? 'block' : 'none';
-    document.getElementById('scan-text').textContent =
-      m === 'hiro' ? 'Apunta al marcador HIRO' : 'Apunta a tu imagen';
-  }
+  // ── BLOQUE 2: ESCASEZ Y COSTO ─────────────────────────────────
+  {
+    categoria: "📦 Escasez y Costo",
+    titulo: "Escasez",
+    icon: "⏳",
+    color: "#00d4ff",
+    cuerpo: `<b style="color:#00d4ff">Condición básica</b> de la economía: los recursos no son suficientes para satisfacer todas las necesidades humanas.
+             <div class="highlight-box" style="border-color:#00d4ff; color:#ccc;">
+               La escasez <b>no significa pobreza</b> — significa que los recursos siempre son finitos frente a deseos ilimitados.
+             </div>
+             Es el origen de todas las decisiones económicas.`
+  },
+  {
+    categoria: "📦 Escasez y Costo",
+    titulo: "Costo de Oportunidad",
+    icon: "🔄",
+    color: "#7b2fff",
+    cuerpo: `<b style="color:#7b2fff">Valor de la mejor alternativa</b> a la que se renuncia al tomar una decisión económica.
+             <div class="highlight-box" style="border-color:#7b2fff; color:#ccc;">
+               Ejemplo: si decides estudiar en lugar de trabajar, tu costo de oportunidad es el salario que dejaste de ganar.
+             </div>
+             Toda decisión tiene un costo de oportunidad, aunque no siempre sea visible o monetario.`
+  },
+  {
+    categoria: "📦 Escasez y Costo",
+    titulo: "Recursos Productivos",
+    icon: "🏭",
+    color: "#00ff88",
+    cuerpo: `Elementos utilizados para <b style="color:#00ff88">producir bienes y servicios</b>. Se clasifican en:
+             <ul>
+               <li><b style="color:#00ff88">Tierra</b> — recursos naturales</li>
+               <li><b style="color:#00d4ff">Trabajo</b> — esfuerzo humano</li>
+               <li><b style="color:#ffcc00">Capital</b> — maquinaria, herramientas, dinero</li>
+               <li><b style="color:#ff4466">Organización</b> — gestión y coordinación</li>
+             </ul>`
+  },
 
-  // ── Iniciar AR ───────────────────────────────────────────────
-  function iniciarAR() {
-    const splash = document.getElementById('splash');
-    splash.classList.add('hidden');
-    setTimeout(() => splash.style.display = 'none', 550);
-    document.getElementById('hud').style.display = 'flex';
-    document.getElementById('scan-hint').style.display = 'block';
+  // ── BLOQUE 3: NECESIDADES ─────────────────────────────────────
+  {
+    categoria: "🧠 Necesidades",
+    titulo: "Necesidades",
+    icon: "🧩",
+    color: "#00d4ff",
+    cuerpo: `<b style="color:#00d4ff">Carencias</b> que experimenta el ser humano y que requieren satisfacción para su bienestar.
+             <div class="highlight-box" style="border-color:#00d4ff; color:#ccc;">
+               <b>Características:</b>
+               <ul>
+                 <li>Son <b>ilimitadas</b></li>
+                 <li>Cambian con el <b>tiempo</b></li>
+                 <li>Varían según la <b>persona y la sociedad</b></li>
+               </ul>
+             </div>`
+  },
+  {
+    categoria: "🧠 Necesidades",
+    titulo: "Clasificación de Necesidades",
+    icon: "📊",
+    color: "#7b2fff",
+    cuerpo: `Las necesidades se clasifican en tres niveles:
+             <div class="highlight-box" style="border-color:#00ff88; color:#ccc; margin-bottom:6px">
+               <b style="color:#00ff88">Primarias (básicas)</b><br>
+               Indispensables para sobrevivir: alimentación, vivienda, salud.
+             </div>
+             <div class="highlight-box" style="border-color:#00d4ff; color:#ccc; margin-bottom:6px">
+               <b style="color:#00d4ff">Secundarias</b><br>
+               Mejoran la calidad de vida: educación, entretenimiento.
+             </div>
+             <div class="highlight-box" style="border-color:#7b2fff; color:#ccc;">
+               <b style="color:#7b2fff">Terciarias</b><br>
+               Relacionadas con el bienestar social y el lujo.
+             </div>`
+  },
 
-    if (modo === 'hiro') iniciarModoHiro();
-    else iniciarModoMindAR();
-  }
+  // ── BLOQUE 4: BIENES ──────────────────────────────────────────
+  {
+    categoria: "🏷️ Bienes",
+    titulo: "Bien",
+    icon: "📦",
+    color: "#ffcc00",
+    cuerpo: `<b style="color:#ffcc00">Objeto material</b> que satisface una necesidad humana y tiene utilidad.
+             <div class="highlight-box" style="border-color:#ffcc00; color:#ccc;">
+               Para que algo sea un bien económico debe ser <b>útil</b>, <b>escaso</b> y <b>transferible</b>.
+             </div>
+             Los bienes se distinguen de los servicios en que son <b>tangibles</b>.`
+  },
+  {
+    categoria: "🏷️ Bienes",
+    titulo: "Bien Libre",
+    icon: "🌬️",
+    color: "#00ff88",
+    cuerpo: `Bien <b style="color:#00ff88">abundante</b> que no tiene costo ni precio en el mercado.
+             <div class="highlight-box" style="border-color:#00ff88; color:#ccc;">
+               Ejemplos: <b>aire</b>, <b>luz solar</b>, agua de lluvia en zonas húmedas.
+             </div>
+             No requiere esfuerzo productivo para obtenerse en condiciones normales. Sin embargo, si se vuelven escasos (como el agua limpia) pueden convertirse en bienes económicos.`
+  },
+  {
+    categoria: "🏷️ Bienes",
+    titulo: "Bien Económico",
+    icon: "💎",
+    color: "#00d4ff",
+    cuerpo: `Bien <b style="color:#00d4ff">escaso</b> que tiene valor y precio porque requiere esfuerzo o recursos para obtenerse.
+             <div class="highlight-box" style="border-color:#00d4ff; color:#ccc;">
+               Su escasez relativa le da <b>valor de cambio</b> en el mercado.
+             </div>
+             La mayoría de los bienes que compramos y vendemos son bienes económicos: alimentos, ropa, tecnología, etc.`
+  },
 
-  // ── Modo HIRO ────────────────────────────────────────────────
-  function iniciarModoHiro() {
-    document.getElementById('scene-arjs').style.display = 'block';
-    const marker = document.getElementById('marker-hiro');
+  // ── BLOQUE 5: PRODUCTO Y SERVICIO ────────────────────────────
+  {
+    categoria: "⚙️ Producto y Servicio",
+    titulo: "Producto",
+    icon: "🏗️",
+    color: "#ff8844",
+    cuerpo: `<b style="color:#ff8844">Resultado de un proceso productivo</b>; puede ser un bien material o un servicio.
+             <div class="highlight-box" style="border-color:#ff8844; color:#ccc;">
+               Todo producto surge de combinar <b>recursos productivos</b> mediante un proceso de transformación.
+             </div>
+             Puede ser un bien <b>tangible</b> (un automóvil) o un servicio <b>intangible</b> (una consulta médica).`
+  },
+  {
+    categoria: "⚙️ Producto y Servicio",
+    titulo: "Servicio",
+    icon: "🤝",
+    color: "#7b2fff",
+    cuerpo: `<b style="color:#7b2fff">Actividad</b> que satisface una necesidad <b>sin producir un objeto material</b>.
+             <div class="highlight-box" style="border-color:#7b2fff; color:#ccc;">
+               Ejemplos: <b>transporte</b>, <b>educación</b>, <b>salud</b>, <b>banca</b>, <b>consultoría</b>.
+             </div>
+             Características: intangible, se produce y consume simultáneamente, no se puede almacenar.`
+  },
+  {
+    categoria: "⚙️ Producto y Servicio",
+    titulo: "Software",
+    icon: "💻",
+    color: "#00d4ff",
+    cuerpo: `Conjunto de <b style="color:#00d4ff">programas y aplicaciones</b> que, aunque no son tangibles, tienen valor económico.
+             <div class="highlight-box" style="border-color:#00d4ff; color:#ccc;">
+               El software se considera un <b>bien económico o servicio</b> porque satisface necesidades y requiere recursos para producirse.
+             </div>
+             Ejemplos: sistemas operativos, apps, videojuegos, plataformas digitales.`
+  },
 
-    marker.addEventListener('markerFound', () => {
-      mostrarOverlay(true);
-      actualizarIconAR('ar-icon-hiro');
-      setHudStatus('Marcador detectado ✓', true);
-    });
-    marker.addEventListener('markerLost', () => {
-      mostrarOverlay(false);
-      setHudStatus('Buscando marcador…', false);
-    });
-  }
+  // ── BLOQUE 6: VALORES ─────────────────────────────────────────
+  {
+    categoria: "💲 Valores Económicos",
+    titulo: "Valor de Uso",
+    icon: "🛠️",
+    color: "#00ff88",
+    cuerpo: `<b style="color:#00ff88">Capacidad</b> de un bien o servicio para satisfacer una necesidad.
+             <div class="highlight-box" style="border-color:#00ff88; color:#ccc;">
+               Es subjetivo: el agua tiene enorme valor de uso (es esencial), pero puede tener poco valor de cambio si es abundante.
+             </div>
+             No siempre coincide con el valor de cambio — esta paradoja se conoce como la <b>paradoja del valor</b>.`
+  },
+  {
+    categoria: "💲 Valores Económicos",
+    titulo: "Valor de Cambio",
+    icon: "🔁",
+    color: "#ffcc00",
+    cuerpo: `<b style="color:#ffcc00">Valor que tiene un bien en el mercado</b> y que permite intercambiarlo por otros bienes o dinero.
+             <div class="highlight-box" style="border-color:#ffcc00; color:#ccc;">
+               Es la base del <b>precio</b> en los mercados. Depende de la oferta, la demanda y la escasez.
+             </div>
+             Ejemplo: un diamante tiene alto valor de cambio aunque su valor de uso sea menor que el del agua.`
+  },
 
-  // ── Modo MindAR ──────────────────────────────────────────────
-  let mindARStarted = false;
-  function iniciarModoMindAR() {
-    const sceneEl = document.getElementById('scene-mindar');
-    sceneEl.style.display = 'block';
+  // ── BLOQUE 7: ACTOS Y ACTIVIDADES ────────────────────────────
+  {
+    categoria: "🔄 Actos y Actividades",
+    titulo: "Acto Económico",
+    icon: "🎯",
+    color: "#ff4466",
+    cuerpo: `<b style="color:#ff4466">Acción consciente</b> del ser humano orientada a satisfacer necesidades utilizando recursos escasos.
+             <div class="highlight-box" style="border-color:#ff4466; color:#ccc;">
+               Ejemplos: <b>comprar</b> un producto, <b>producir</b> un bien, <b>ahorrar</b> dinero.
+             </div>
+             Es la unidad mínima de la economía: cada decisión individual de producción o consumo es un acto económico.`
+  },
+  {
+    categoria: "🔄 Actos y Actividades",
+    titulo: "Actividad Económica",
+    icon: "🌐",
+    color: "#7b2fff",
+    cuerpo: `<b style="color:#7b2fff">Conjunto de actos económicos</b> relacionados entre sí.
+             <div class="highlight-box" style="border-color:#7b2fff; color:#ccc;">
+               Abarca tres grandes procesos:
+               <ul>
+                 <li><b style="color:#00ff88">Producción</b> — crear bienes y servicios</li>
+                 <li><b style="color:#00d4ff">Distribución</b> — hacer llegar los bienes a quienes los necesitan</li>
+                 <li><b style="color:#ffcc00">Consumo</b> — usar los bienes para satisfacer necesidades</li>
+               </ul>
+             </div>`
+  },
 
-    sceneEl.addEventListener('loaded', () => {
-      if (!mindARStarted) {
-        mindARStarted = true;
-        const sys = sceneEl.systems['mindar-image-system'];
-        if (sys) sys.start();
-      }
-    });
+  // ── BLOQUE 8: CIENCIAS ────────────────────────────────────────
+  {
+    categoria: "🔬 Ciencias",
+    titulo: "Ciencia",
+    icon: "🔬",
+    color: "#00d4ff",
+    cuerpo: `<b style="color:#00d4ff">Conjunto de conocimientos</b> organizados y comprobables que explican fenómenos de la realidad.
+             <div class="highlight-box" style="border-color:#00d4ff; color:#ccc;">
+               Características: <b>sistemática</b>, <b>verificable</b>, <b>objetiva</b> y <b>acumulativa</b>.
+             </div>
+             Se divide en dos grandes ramas: <b>ciencias formales</b> y <b>ciencias fácticas</b>.`
+  },
+  {
+    categoria: "🔬 Ciencias",
+    titulo: "Ciencia Formal",
+    icon: "📐",
+    color: "#7b2fff",
+    cuerpo: `Ciencia que estudia <b style="color:#7b2fff">sistemas abstractos</b>, sin basarse en la experiencia directa.
+             <div class="highlight-box" style="border-color:#7b2fff; color:#ccc;">
+               Ejemplos: <b>lógica</b>, <b>matemáticas</b>.
+             </div>
+             Sus verdades son <b>necesarias y universales</b>: 2+2=4 en cualquier contexto. No requieren observación empírica para ser válidas.`
+  },
+  {
+    categoria: "🔬 Ciencias",
+    titulo: "Ciencia Fáctica",
+    icon: "🧪",
+    color: "#00ff88",
+    cuerpo: `Ciencia que estudia <b style="color:#00ff88">hechos reales</b> mediante la observación y experimentación.
+             <div class="highlight-box" style="border-color:#00ff88; color:#ccc;">
+               Ejemplos: <b>economía</b>, <b>sociología</b>, <b>física</b>, <b>biología</b>.
+             </div>
+             Sus conclusiones son <b>provisionales</b>: pueden modificarse si los hechos observados cambian o si aparece nueva evidencia.`
+  },
 
-    const target = sceneEl.querySelector('[mindar-image-target]');
-    if (target) {
-      target.addEventListener('targetFound', () => {
-        mostrarOverlay(true);
-        actualizarIconAR('ar-icon-mindar');
-        setHudStatus('Imagen detectada ✓', true);
-      });
-      target.addEventListener('targetLost', () => {
-        mostrarOverlay(false);
-        setHudStatus('Buscando imagen…', false);
-      });
+  // ── BLOQUE 9: TÉCNICA E INGENIERÍA ───────────────────────────
+  {
+    categoria: "🛠️ Técnica e Ingeniería",
+    titulo: "Técnica",
+    icon: "⚙️",
+    color: "#ff8844",
+    cuerpo: `<b style="color:#ff8844">Conjunto de procedimientos y habilidades</b> que permiten realizar una actividad de manera eficiente.
+             <div class="highlight-box" style="border-color:#ff8844; color:#ccc;">
+               La técnica es <b>práctica y aplicada</b>: se aprende haciendo y busca resultados concretos.
+             </div>
+             Diferencia clave: la técnica <b>aplica conocimiento</b> (a veces empírico), mientras que la ciencia <b>genera conocimiento</b>.`
+  },
+  {
+    categoria: "🛠️ Técnica e Ingeniería",
+    titulo: "Ingeniería",
+    icon: "🏗️",
+    color: "#00d4ff",
+    cuerpo: `<b style="color:#00d4ff">Aplicación de conocimientos científicos y técnicos</b> para diseñar soluciones prácticas a problemas reales.
+             <div class="highlight-box" style="border-color:#00d4ff; color:#ccc;">
+               Une <b>ciencia</b> (conocimiento) + <b>técnica</b> (habilidad) para resolver <b>problemas económicos y técnicos</b>.
+             </div>
+             La ingeniería transforma recursos productivos en productos y servicios que satisfacen necesidades humanas.`
+  },
+
+];
+// ════════════════════════════════════════════════════════════════
+
+let modo = 'hiro';
+let conceptoActual = 0;
+
+// ── Selección de modo ────────────────────────────────────────────
+function selectMode(m) {
+  modo = m;
+  document.getElementById('card-hiro').classList.toggle('selected', m === 'hiro');
+  document.getElementById('card-mindar').classList.toggle('selected', m === 'mindar');
+  document.getElementById('mindar-notice').style.display = m === 'mindar' ? 'block' : 'none';
+  document.getElementById('scan-text').textContent =
+    m === 'hiro' ? 'Apunta al marcador HIRO' : 'Apunta a tu imagen';
+}
+
+// ── Iniciar AR ───────────────────────────────────────────────────
+function iniciarAR() {
+  const s = document.getElementById('splash');
+  s.classList.add('hidden');
+  setTimeout(() => s.style.display = 'none', 550);
+  document.getElementById('hud').style.display = 'flex';
+  document.getElementById('scan-hint').style.display = 'block';
+  modo === 'hiro' ? iniciarModoHiro() : iniciarModoMindAR();
+}
+
+// ── Modo HIRO ────────────────────────────────────────────────────
+function iniciarModoHiro() {
+  document.getElementById('scene-arjs').style.display = 'block';
+  const marker = document.getElementById('marker-hiro');
+  marker.addEventListener('markerFound', () => {
+    mostrarOverlay(true);
+    actualizarIconAR('ar-icon-hiro');
+    setHudStatus('Marcador detectado ✓', true);
+  });
+  marker.addEventListener('markerLost', () => {
+    mostrarOverlay(false);
+    setHudStatus('Buscando marcador…', false);
+  });
+}
+
+// ── Modo MindAR ──────────────────────────────────────────────────
+let mindARStarted = false;
+function iniciarModoMindAR() {
+  const sceneEl = document.getElementById('scene-mindar');
+  sceneEl.style.display = 'block';
+  sceneEl.addEventListener('loaded', () => {
+    if (!mindARStarted) {
+      mindARStarted = true;
+      const sys = sceneEl.systems['mindar-image-system'];
+      if (sys) sys.start();
     }
+  });
+  const target = sceneEl.querySelector('[mindar-image-target]');
+  if (target) {
+    target.addEventListener('targetFound', () => {
+      mostrarOverlay(true);
+      actualizarIconAR('ar-icon-mindar');
+      setHudStatus('Imagen detectada ✓', true);
+    });
+    target.addEventListener('targetLost', () => {
+      mostrarOverlay(false);
+      setHudStatus('Buscando imagen…', false);
+    });
   }
+}
 
-  // ── Overlay de conceptos ─────────────────────────────────────
-  function mostrarOverlay(visible) {
-    document.getElementById('concept-overlay').style.display = visible ? 'flex' : 'none';
-    document.getElementById('scan-hint').style.display    = visible ? 'none' : 'block';
-    if (visible) renderConcepto();
-  }
+// ── Overlay de conceptos ─────────────────────────────────────────
+function mostrarOverlay(visible) {
+  document.getElementById('concept-overlay').style.display = visible ? 'flex' : 'none';
+  document.getElementById('scan-hint').style.display = visible ? 'none' : 'block';
+  if (visible) renderConcepto();
+}
 
-  function renderConcepto() {
-    const c = CONCEPTOS[conceptoActual];
-    document.getElementById('c-title').innerHTML = c.titulo;
-    document.getElementById('c-body').innerHTML  = c.cuerpo;
-    document.getElementById('c-counter').textContent = `${conceptoActual + 1} / ${CONCEPTOS.length}`;
-    document.getElementById('btn-prev').disabled = conceptoActual === 0;
-    document.getElementById('btn-next').disabled = conceptoActual === CONCEPTOS.length - 1;
+function renderConcepto() {
+  const c = CONCEPTOS[conceptoActual];
 
-    document.getElementById('dots').innerHTML = CONCEPTOS.map((_, i) =>
-      `<div class="dot ${i === conceptoActual ? 'active' : ''}"></div>`
-    ).join('');
-  }
+  document.getElementById('c-category').textContent = c.categoria;
+  document.getElementById('c-category').style.color = c.color;
+  document.getElementById('c-icon').textContent = c.icon;
+  document.getElementById('c-title').textContent = c.titulo;
+  document.getElementById('c-title').style.color = c.color;
+  document.getElementById('c-body').innerHTML = c.cuerpo;
+  document.getElementById('c-counter').textContent = `${conceptoActual + 1} / ${CONCEPTOS.length}`;
+  document.getElementById('btn-prev').disabled = conceptoActual === 0;
+  document.getElementById('btn-next').disabled = conceptoActual === CONCEPTOS.length - 1;
 
-  function cambiarConcepto(dir) {
-    const nuevo = conceptoActual + dir;
-    if (nuevo < 0 || nuevo >= CONCEPTOS.length) return;
-    conceptoActual = nuevo;
-    renderConcepto();
-    const iconId = modo === 'hiro' ? 'ar-icon-hiro' : 'ar-icon-mindar';
-    actualizarIconAR(iconId);
-  }
+  // Acento del borde del card
+  document.getElementById('concept-card').style.borderColor = c.color + '44';
 
-  function actualizarIconAR(id) {
-    const el = document.getElementById(id);
-    if (el) el.setAttribute('value', CONCEPTOS[conceptoActual].icon);
-  }
+  // Dots
+  document.getElementById('dots').innerHTML = CONCEPTOS.map((_, i) =>
+    `<div class="dot ${i === conceptoActual ? 'active' : ''}"
+          style="${i === conceptoActual ? 'background:' + CONCEPTOS[i].color : ''}"
+          onclick="irAConcepto(${i})"></div>`
+  ).join('');
 
-  function setHudStatus(txt, found) {
-    const el = document.getElementById('hud-status');
-    el.textContent = txt;
-    el.classList.toggle('found', found);
-  }
+  // Scroll al inicio del body
+  document.getElementById('c-body').scrollTop = 0;
+}
+
+function cambiarConcepto(dir) {
+  const nuevo = conceptoActual + dir;
+  if (nuevo < 0 || nuevo >= CONCEPTOS.length) return;
+  conceptoActual = nuevo;
+  renderConcepto();
+  actualizarIconAR(modo === 'hiro' ? 'ar-icon-hiro' : 'ar-icon-mindar');
+}
+
+function irAConcepto(i) {
+  conceptoActual = i;
+  renderConcepto();
+  actualizarIconAR(modo === 'hiro' ? 'ar-icon-hiro' : 'ar-icon-mindar');
+}
+
+function actualizarIconAR(id) {
+  const el = document.getElementById(id);
+  if (el) el.setAttribute('value', CONCEPTOS[conceptoActual].icon);
+}
+
+function setHudStatus(txt, found) {
+  const el = document.getElementById('hud-status');
+  el.textContent = txt;
+  el.classList.toggle('found', found);
+}
 
 </script>
 </body>
