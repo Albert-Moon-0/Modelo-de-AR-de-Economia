@@ -1,333 +1,504 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AR Economía</title>
 
-  <!-- A-Frame y AR.js -->
+  <!-- A-Frame -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+
+  <!-- AR.js (para marcador HIRO) -->
   <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
 
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #0a0a0a; }
+  <!-- MindAR.js (para imagen personalizada) -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
-    /* Pantalla de bienvenida */
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --cyan: #00d4ff;
+      --purple: #7b2fff;
+      --red: #ff4466;
+      --green: #00ff88;
+      --gold: #ffcc00;
+    }
+
+    body { font-family: 'Segoe UI', sans-serif; background: #07080f; overflow: hidden; }
+
+    /* ── SPLASH ── */
     #splash {
       position: fixed; inset: 0; z-index: 9999;
-      background: linear-gradient(135deg, #0a0a2e, #1a1a4e, #0d2137);
+      background: radial-gradient(ellipse at 30% 40%, #0d1f3c, #07080f 60%),
+                  radial-gradient(ellipse at 80% 70%, #1a0a2e, transparent 60%);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 24px; padding: 32px; text-align: center;
-      transition: opacity 0.6s ease;
+      gap: 18px; padding: 32px; text-align: center;
+      transition: opacity 0.5s;
     }
+    #splash.hidden { opacity: 0; pointer-events: none; }
+
     #splash h1 {
-      font-size: clamp(2rem, 6vw, 3.5rem);
-      font-weight: 900; letter-spacing: -2px;
-      background: linear-gradient(90deg, #00d4ff, #7b2fff, #00d4ff);
+      font-size: clamp(2rem, 7vw, 3.5rem); font-weight: 900; letter-spacing: -2px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple), var(--cyan));
       background-size: 200%;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       animation: shimmer 3s linear infinite;
     }
     @keyframes shimmer { to { background-position: 200% center; } }
-    #splash p { color: #aaa; font-size: 1rem; max-width: 340px; line-height: 1.6; }
-    #splash .marker-hint {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 16px; padding: 20px 28px;
-      color: #ccc; font-size: 0.9rem; line-height: 1.7;
+
+    #splash > p { color: #777; font-size: 0.95rem; max-width: 360px; line-height: 1.6; }
+
+    /* Selector de modo */
+    .mode-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; width: 100%; max-width: 400px; margin-top: 4px;
     }
-    #splash .marker-hint strong { color: #00d4ff; }
-    #start-btn {
-      background: linear-gradient(135deg, #00d4ff, #7b2fff);
+    .mode-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px; padding: 20px 14px;
+      cursor: pointer; transition: all 0.25s; text-align: center;
+    }
+    .mode-card:hover, .mode-card.selected {
+      border-color: var(--cyan);
+      background: rgba(0,212,255,0.07);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0,212,255,0.12);
+    }
+    .mode-card .icon { font-size: 1.9rem; display: block; margin-bottom: 8px; }
+    .mode-card h3 { color: #fff; font-size: 0.9rem; margin-bottom: 4px; }
+    .mode-card p { color: #555; font-size: 0.73rem; line-height: 1.45; }
+
+    /* Aviso MindAR */
+    #mindar-notice {
+      background: rgba(255,204,0,0.07);
+      border: 1px solid rgba(255,204,0,0.22);
+      border-radius: 12px; padding: 13px 16px;
+      color: #bbb; font-size: 0.8rem; line-height: 1.65;
+      max-width: 370px; display: none;
+    }
+    #mindar-notice strong { color: var(--gold); }
+    #mindar-notice a { color: var(--cyan); }
+
+    /* Botón arrancar */
+    .start-btn {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
       border: none; border-radius: 50px;
-      color: #fff; font-size: 1.1rem; font-weight: 700;
-      padding: 14px 42px; cursor: pointer;
-      box-shadow: 0 0 30px rgba(0,212,255,0.4);
+      color: #fff; font-size: 1rem; font-weight: 700;
+      padding: 14px 44px; cursor: pointer;
+      box-shadow: 0 0 30px rgba(0,212,255,0.25);
       transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%; max-width: 300px;
     }
-    #start-btn:hover { transform: scale(1.05); box-shadow: 0 0 50px rgba(0,212,255,0.6); }
-    #splash.hidden { opacity: 0; pointer-events: none; }
+    .start-btn:hover { transform: scale(1.04); box-shadow: 0 0 50px rgba(0,212,255,0.45); }
 
-    /* HUD superior */
+    .link-marcadores {
+      color: #444; font-size: 0.8rem; text-decoration: none;
+      border-bottom: 1px dashed #333; padding-bottom: 2px;
+      transition: color 0.2s;
+    }
+    .link-marcadores:hover { color: var(--cyan); }
+
+    /* ── HUD ── */
     #hud {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent);
-      padding: 16px 24px;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      background: linear-gradient(180deg, rgba(7,8,15,0.85), transparent);
+      padding: 12px 18px; display: none;
+      align-items: center; justify-content: space-between;
+    }
+    .hud-logo { color: var(--cyan); font-weight: 900; font-size: 1rem; letter-spacing: 1px; }
+    .hud-status {
+      color: #fff; font-size: 0.78rem;
+      background: rgba(123,47,255,0.35);
+      border: 1px solid rgba(123,47,255,0.6);
+      border-radius: 20px; padding: 3px 12px; transition: all 0.3s;
+    }
+    .hud-status.found { background: rgba(0,212,255,0.12); border-color: var(--cyan); }
+
+    /* ── OVERLAY DE CONCEPTOS ── */
+    #concept-overlay {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 400;
+      display: none; flex-direction: column; pointer-events: none;
+    }
+    #concept-card {
+      margin: 0 12px 14px;
+      background: rgba(7,8,15,0.93);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 20px; padding: 20px 22px 16px;
+      backdrop-filter: blur(16px);
+      pointer-events: all;
+      animation: slideUp 0.35s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } }
+
+    .concept-title { font-size: 1.05rem; font-weight: 800; color: var(--cyan); margin-bottom: 8px; }
+    .concept-body  { font-size: 0.82rem; color: #bbb; line-height: 1.65; }
+
+    .concept-nav {
       display: flex; align-items: center; justify-content: space-between;
-      display: none;
+      margin-top: 14px; gap: 10px; pointer-events: all;
     }
-    #hud .logo { color: #00d4ff; font-weight: 900; font-size: 1.1rem; letter-spacing: 1px; }
-    #hud .concept-name {
-      color: #fff; font-size: 0.85rem;
-      background: rgba(123,47,255,0.5);
-      border: 1px solid rgba(123,47,255,0.8);
-      border-radius: 20px; padding: 4px 14px;
+    .nav-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; color: #bbb; font-size: 0.78rem;
+      padding: 8px 14px; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
     }
+    .nav-btn:hover { background: rgba(0,212,255,0.12); border-color: var(--cyan); color: #fff; }
+    .nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 
-    /* Indicador de escaneo */
+    .concept-counter { color: #444; font-size: 0.78rem; flex: 1; text-align: center; }
+
+    .concept-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 6px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: all 0.3s; }
+    .dot.active { background: var(--cyan); transform: scale(1.35); }
+
+    /* Hint de escaneo */
     #scan-hint {
-      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-      z-index: 100; color: rgba(255,255,255,0.7);
-      font-size: 0.85rem; text-align: center;
-      animation: pulse 2s ease-in-out infinite;
-      display: none;
+      position: fixed; bottom: 130px; left: 50%; transform: translateX(-50%);
+      z-index: 300; text-align: center;
+      animation: pulse 2s ease-in-out infinite; display: none; pointer-events: none;
     }
-    @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
-    #scan-hint .icon { font-size: 2rem; display: block; margin-bottom: 6px; }
+    @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+    #scan-hint .scan-icon { font-size: 2rem; display: block; margin-bottom: 4px; }
+    #scan-hint p { color: rgba(255,255,255,0.55); font-size: 0.8rem; }
 
-    /* Lista de marcadores en la guía */
-    .marker-list { list-style: none; text-align: left; }
-    .marker-list li { padding: 4px 0; }
-    .marker-list li::before { content: "▶ "; color: #7b2fff; }
+    /* ── ESCENAS AR ── */
+    #scene-arjs, #scene-mindar {
+      position: fixed; inset: 0; z-index: 1; display: none;
+      width: 100%; height: 100%;
+    }
   </style>
 </head>
 <body>
 
-<!-- ============================================================
-     PANTALLA DE BIENVENIDA
-     ============================================================ -->
+<!-- ═══════════════════════════════════════
+     SPLASH
+═══════════════════════════════════════ -->
 <div id="splash">
   <h1>AR Economía</h1>
-  <p>Apunta tu cámara a los <strong style="color:#00d4ff">marcadores impresos</strong> para ver los conceptos en realidad aumentada.</p>
+  <p>Elige cómo quieres activar la realidad aumentada:</p>
 
-  <div class="marker-hint">
-    <strong>Marcadores disponibles:</strong><br>
-    <ul class="marker-list">
-      <li>Marcador HIRO → <strong style="color:#00d4ff">Oferta y Demanda</strong></li>
-      <li>Marcador KANJI → <strong style="color:#7b2fff">Inflación</strong></li>
-      <!-- Agrega más conforme añadas conceptos -->
-    </ul>
-    <br>
-    Descarga los marcadores en la página <strong>< a href="marcadores.html">marcadores.html</a></strong>
+  <div class="mode-grid">
+    <div class="mode-card selected" id="card-hiro" onclick="selectMode('hiro')">
+      <span class="icon">⬛</span>
+      <h3>Marcador HIRO</h3>
+      <p>Cuadro negro clásico. Fácil de imprimir.</p>
+    </div>
+    <div class="mode-card" id="card-mindar" onclick="selectMode('mindar')">
+      <span class="icon">🖼️</span>
+      <h3>Imagen propia</h3>
+      <p>Activa el AR con una imagen que tú elijas.</p>
+    </div>
   </div>
 
-  <button id="start-btn" onclick="iniciarAR()">📷 Iniciar Cámara</button>
+  <div id="mindar-notice">
+    <strong>⚠️ Pasos para usar imagen propia:</strong><br>
+    1. Sube tu imagen en
+    <a href="https://hiukim.github.io/mind-ar-js-doc/tools/compile" target="_blank">este compilador</a><br>
+    2. Descarga el archivo <code>.mind</code> generado<br>
+    3. Ponlo en la carpeta del proyecto con el nombre <code>marcador.mind</code><br>
+    4. ¡Listo! Apunta la cámara a esa imagen.
+  </div>
 
-  <a href="marcadores.html" target="_blank" style="
-    color: #aaa;
-    font-size: 0.88rem;
-    text-decoration: none;
-    border-bottom: 1px dashed rgba(255,255,255,0.25);
-    padding-bottom: 2px;
-    transition: color 0.2s;
-  " onmouseover="this.style.color='#00d4ff'" onmouseout="this.style.color='#aaa'">
-    🖨️ ¿No tienes los marcadores? Descárgalos aquí
+  <button class="start-btn" onclick="iniciarAR()">📷 Iniciar Cámara</button>
+
+  <a class="link-marcadores" href="marcadores.html" target="_blank">
+    🖨️ ¿No tienes el marcador HIRO? Descárgalo aquí
   </a>
 </div>
 
-<!-- HUD -->
+
+<!-- ═══════════════════════════════════════
+     HUD
+═══════════════════════════════════════ -->
 <div id="hud">
-  <span class="logo">📊 AR ECON</span>
-  <span class="concept-name" id="concept-label">Buscando marcador…</span>
+  <span class="hud-logo">📊 AR ECON</span>
+  <span class="hud-status" id="hud-status">Buscando marcador…</span>
 </div>
 
-<!-- Hint de escaneo -->
 <div id="scan-hint">
-  <span class="icon">🔍</span>
-  Apunta la cámara a un marcador
+  <span class="scan-icon">🔍</span>
+  <p id="scan-text">Apunta al marcador HIRO</p>
 </div>
 
 
-<!-- ============================================================
-     ESCENA AR
-     ============================================================ -->
-<a-scene
-  id="ar-scene"
+<!-- ═══════════════════════════════════════
+     PANEL OVERLAY DE CONCEPTOS
+═══════════════════════════════════════ -->
+<div id="concept-overlay">
+  <div id="concept-card">
+    <div class="concept-dots" id="dots"></div>
+    <div class="concept-title" id="c-title"></div>
+    <div class="concept-body"  id="c-body"></div>
+    <div class="concept-nav">
+      <button class="nav-btn" id="btn-prev" onclick="cambiarConcepto(-1)">← Anterior</button>
+      <span class="concept-counter" id="c-counter"></span>
+      <button class="nav-btn" id="btn-next" onclick="cambiarConcepto(1)">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     MODO A — AR.js + marcador HIRO
+═══════════════════════════════════════ -->
+<a-scene id="scene-arjs"
   embedded
   arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
   vr-mode-ui="enabled: false"
-  renderer="logarithmicDepthBuffer: true; antialias: true;"
-  style="display:none; position:fixed; inset:0;">
+  renderer="logarithmicDepthBuffer: true; antialias: true;">
 
+  <a-marker preset="hiro" id="marker-hiro">
 
-  <!-- ══════════════════════════════════════════
-       CONCEPTO 1: OFERTA Y DEMANDA
-       Marcador: HIRO (el más fácil de imprimir)
-       ══════════════════════════════════════════ -->
-  <a-marker preset="hiro" id="marker-hiro"
-            markerhandler="label: Oferta y Demanda">
-
-    <!-- Panel de fondo -->
-    <a-plane
-      color="#0d1b2a"
-      opacity="0.92"
-      width="3" height="1.8"
-      position="0 0.9 0"
-      rotation="-90 0 0"
-      material="side: double">
-    </a-plane>
-
-    <!-- Título -->
-    <a-text
-      value="OFERTA Y DEMANDA"
-      color="#00d4ff"
-      align="center"
-      width="2.8"
-      position="0 1.75 0.01"
-      rotation="-90 0 0"
-      font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
-      negate="false">
-    </a-text>
-
-    <!-- Línea divisoria -->
-    <a-plane color="#00d4ff" opacity="0.6" width="2.6" height="0.02"
-             position="0 1.55 0.01" rotation="-90 0 0"></a-plane>
-
-    <!-- Cuerpo del texto -->
-    <a-text
-      value="La LEY DE DEMANDA dice que\na mayor precio, menor cantidad\ndemandada por los consumidores.\n\nLa LEY DE OFERTA dice lo contrario:\na mayor precio, más producen\nlos vendedores.\n\nEl EQUILIBRIO es el punto donde\noferta = demanda."
-      color="#e0e0e0"
-      align="center"
-      width="2.5"
-      position="0 1.3 0.01"
-      rotation="-90 0 0"
-      wrap-count="35">
-    </a-text>
-
-    <!-- Flecha decorativa de oferta (verde) -->
-    <a-cone color="#00ff88" radius-bottom="0.08" radius-top="0"
-            height="0.35" position="-0.9 0.5 0"
-            rotation="-90 0 0" opacity="0.9">
-    </a-cone>
-    <a-cylinder color="#00ff88" radius="0.04" height="0.3"
-                position="-0.9 0.2 0" rotation="-90 0 0" opacity="0.9">
+    <!-- Plataforma giratoria -->
+    <a-cylinder color="#00d4ff" opacity="0.15"
+      radius="0.85" height="0.04" position="0 0 0"
+      animation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear">
     </a-cylinder>
 
-    <!-- Flecha decorativa de demanda (rojo) -->
-    <a-cone color="#ff4466" radius-bottom="0.08" radius-top="0"
-            height="0.35" position="0.9 0.2 0"
-            rotation="90 0 0" opacity="0.9">
-    </a-cone>
-    <a-cylinder color="#ff4466" radius="0.04" height="0.3"
-                position="0.9 0.5 0" rotation="-90 0 0" opacity="0.9">
-    </a-cylinder>
+    <!-- Icono central del concepto actual -->
+    <a-text id="ar-icon-hiro" value="📈"
+      align="center" width="3"
+      position="0 0.55 0" rotation="-90 0 0"
+      scale="1.5 1.5 1.5">
+    </a-text>
 
-    <!-- Esfera de equilibrio animada -->
-    <a-sphere color="#ffcc00" radius="0.12"
-              position="0 0.35 0"
-              animation="property: position; to: 0 0.6 0; dur: 1200; dir: alternate; loop: true; easing: easeInOutSine">
-    </a-sphere>
+    <!-- Anillo exterior -->
+    <a-torus color="#7b2fff" opacity="0.55"
+      radius="0.95" radius-tubular="0.025"
+      position="0 0.06 0"
+      animation="property: rotation; to: 0 360 0; dur: 11000; loop: true; easing: linear">
+    </a-torus>
+
+    <!-- Esferas orbitando -->
+    <a-entity animation="property: rotation; to: 0 360 0; dur: 5000; loop: true; easing: linear">
+      <a-sphere color="#00d4ff" radius="0.07" position="1 0.3 0" opacity="0.85"></a-sphere>
+    </a-entity>
+    <a-entity animation="property: rotation; to: 0 -360 0; dur: 7200; loop: true; easing: linear">
+      <a-sphere color="#ff4466" radius="0.055" position="0.82 0.5 0" opacity="0.75"></a-sphere>
+    </a-entity>
+    <a-entity animation="property: rotation; to: 0 360 0; dur: 9000; loop: true; easing: linear">
+      <a-sphere color="#ffcc00" radius="0.06" position="0.7 0.2 0" opacity="0.8"></a-sphere>
+    </a-entity>
 
   </a-marker>
 
-
-  <!-- ══════════════════════════════════════════
-       CONCEPTO 2: INFLACIÓN
-       Marcador: KANJI
-       ══════════════════════════════════════════ -->
-  <a-marker preset="kanji" id="marker-kanji"
-            markerhandler="label: Inflación">
-
-    <!-- Panel -->
-    <a-plane
-      color="#1a0a2e"
-      opacity="0.92"
-      width="3" height="1.8"
-      position="0 0.9 0"
-      rotation="-90 0 0"
-      material="side: double">
-    </a-plane>
-
-    <!-- Título -->
-    <a-text
-      value="INFLACIÓN"
-      color="#ff4466"
-      align="center"
-      width="2.8"
-      position="0 1.75 0.01"
-      rotation="-90 0 0"
-      font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
-      negate="false">
-    </a-text>
-
-    <a-plane color="#ff4466" opacity="0.6" width="2.6" height="0.02"
-             position="0 1.55 0.01" rotation="-90 0 0"></a-plane>
-
-    <a-text
-      value="La INFLACIÓN es el aumento\ngeneralizado y sostenido en el\nnivel de precios de bienes\ny servicios.\n\nSe mide con el IPC\n(Índice de Precios al Consumidor).\n\nCausas: exceso de dinero en\ncirculación, aumento de costos,\no mayor demanda."
-      color="#e0e0e0"
-      align="center"
-      width="2.5"
-      position="0 1.3 0.01"
-      rotation="-90 0 0"
-      wrap-count="35">
-    </a-text>
-
-    <!-- Monedas animadas ascendentes -->
-    <a-cylinder color="#ffcc00" radius="0.1" height="0.03"
-                position="-0.7 0.3 0"
-                animation="property: position; to: -0.7 0.8 0; dur: 1500; dir: alternate; loop: true; easing: easeInOutSine">
-    </a-cylinder>
-    <a-cylinder color="#ffcc00" radius="0.1" height="0.03"
-                position="0 0.1 0"
-                animation="property: position; to: 0 0.7 0; dur: 1800; dir: alternate; loop: true; easing: easeInOutSine; delay: 300">
-    </a-cylinder>
-    <a-cylinder color="#ffcc00" radius="0.1" height="0.03"
-                position="0.7 0.2 0"
-                animation="property: position; to: 0.7 0.75 0; dur: 1600; dir: alternate; loop: true; easing: easeInOutSine; delay: 600">
-    </a-cylinder>
-
-    <!-- Flecha hacia arriba (precio subiendo) -->
-    <a-cone color="#ff4466" radius-bottom="0.12" radius-top="0"
-            height="0.4"
-            position="0 0.55 0"
-            rotation="-90 0 0"
-            animation="property: scale; to: 1.3 1.3 1.3; dur: 900; dir: alternate; loop: true">
-    </a-cone>
-
-  </a-marker>
-
-
-  <!-- ══════════════════════════════════════════
-       CONCEPTO 3: PLACEHOLDER (agrega más aquí)
-       Marcador: LETTERF (puedes cambiar el preset)
-       ══════════════════════════════════════════ -->
-  <!--
-  <a-marker preset="letterF" id="marker-pib" markerhandler="label: PIB">
-    ... tu contenido aquí ...
-  </a-marker>
-  -->
-
-
-  <!-- Cámara AR -->
   <a-entity camera></a-entity>
 </a-scene>
 
 
-<!-- ============================================================
-     LÓGICA JAVASCRIPT
-     ============================================================ -->
-<script>
-  // Componente para detectar qué marcador está visible y actualizar el HUD
-  AFRAME.registerComponent('markerhandler', {
-    schema: { label: { type: 'string', default: '' } },
-    init() {
-      const label = document.getElementById('concept-label');
-      this.el.addEventListener('markerFound', () => {
-        label.textContent = this.data.label;
-        label.style.borderColor = '#00d4ff';
-      });
-      this.el.addEventListener('markerLost', () => {
-        label.textContent = 'Buscando marcador…';
-        label.style.borderColor = 'rgba(123,47,255,0.8)';
-      });
-    }
-  });
+<!-- ═══════════════════════════════════════
+     MODO B — MindAR + imagen personalizada
 
+     INSTRUCCIONES:
+     1. Ve a https://hiukim.github.io/mind-ar-js-doc/tools/compile
+     2. Sube tu imagen (portada, infografía, etc.)
+     3. Descarga el .mind generado
+     4. Renómbralo "marcador.mind" y ponlo en la misma carpeta que index.html
+     5. ¡Eso es todo! El código ya lo usa automáticamente.
+═══════════════════════════════════════ -->
+<a-scene id="scene-mindar"
+  mindar-image="imageTargetSrc: marcador.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes;"
+  color-space="sRGB"
+  renderer="colorManagement: true"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <a-entity mindar-image-target="targetIndex: 0">
+
+    <!-- Plataforma giratoria -->
+    <a-cylinder color="#7b2fff" opacity="0.15"
+      radius="0.6" height="0.03" position="0 0 0"
+      animation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear">
+    </a-cylinder>
+
+    <!-- Icono central -->
+    <a-text id="ar-icon-mindar" value="📈"
+      align="center" width="3"
+      position="0 0.5 0" rotation="0 0 0"
+      scale="1.5 1.5 1.5">
+    </a-text>
+
+    <!-- Anillo -->
+    <a-torus color="#00d4ff" opacity="0.5"
+      radius="0.78" radius-tubular="0.022"
+      position="0 0.04 0"
+      animation="property: rotation; to: 0 360 0; dur: 10000; loop: true; easing: linear">
+    </a-torus>
+
+    <!-- Esferas orbitando -->
+    <a-entity animation="property: rotation; to: 0 360 0; dur: 5200; loop: true; easing: linear">
+      <a-sphere color="#7b2fff" radius="0.06" position="0.85 0.25 0" opacity="0.9"></a-sphere>
+    </a-entity>
+    <a-entity animation="property: rotation; to: 0 -360 0; dur: 7600; loop: true; easing: linear">
+      <a-sphere color="#ffcc00" radius="0.055" position="0.72 0.4 0" opacity="0.8"></a-sphere>
+    </a-entity>
+
+  </a-entity>
+</a-scene>
+
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════ -->
+<script>
+
+  // ══════════════════════════════════════════════════════════════
+  //  CONCEPTOS DE ECONOMÍA
+  //  ↓ Edita aquí para agregar o modificar tus temas ↓
+  // ══════════════════════════════════════════════════════════════
+  const CONCEPTOS = [
+    {
+      titulo: "📈 Oferta y Demanda",
+      cuerpo: `La <b style="color:#00d4ff">Ley de Demanda</b>: a mayor precio, menor cantidad demandada.<br><br>
+               La <b style="color:#00ff88">Ley de Oferta</b>: a mayor precio, mayor cantidad ofrecida.<br><br>
+               El <b style="color:#ffcc00">Equilibrio</b> es el punto donde ambas fuerzas se igualan.`,
+      icon: "📈"
+    },
+    {
+      titulo: "💸 Inflación",
+      cuerpo: `Aumento generalizado y sostenido en el nivel de precios.<br><br>
+               Se mide con el <b style="color:#ffcc00">IPC</b> (Índice de Precios al Consumidor).<br><br>
+               Causas: exceso de dinero en circulación, aumento de costos o mayor demanda.`,
+      icon: "💸"
+    },
+    {
+      titulo: "🏦 PIB",
+      cuerpo: `El <b style="color:#00d4ff">Producto Interno Bruto</b> mide el valor total de bienes y servicios producidos en un país.<br><br>
+               <b style="color:#00ff88">PIB = C + I + G + (X − M)</b><br><br>
+               C=consumo · I=inversión · G=gasto público · X=exportaciones · M=importaciones`,
+      icon: "🏦"
+    },
+    {
+      titulo: "⚖️ Política Fiscal",
+      cuerpo: `Uso del <b style="color:#00d4ff">gasto público</b> y los <b style="color:#ff4466">impuestos</b> para influir en la economía.<br><br>
+               <b style="color:#00ff88">Expansiva:</b> más gasto / menos impuestos → estimula el crecimiento.<br><br>
+               <b style="color:#ff4466">Contractiva:</b> menos gasto / más impuestos → enfría la economía.`,
+      icon: "⚖️"
+    },
+    // ── Agrega aquí más conceptos con el mismo formato ──────────
+    // {
+    //   titulo: "🔄 Tu concepto",
+    //   cuerpo: `Explicación del concepto.<br><br>Más detalles aquí.`,
+    //   icon: "🔄"
+    // },
+  ];
+  // ══════════════════════════════════════════════════════════════
+
+  let modo = 'hiro';
+  let conceptoActual = 0;
+
+  // ── Selección de modo ────────────────────────────────────────
+  function selectMode(m) {
+    modo = m;
+    document.getElementById('card-hiro').classList.toggle('selected', m === 'hiro');
+    document.getElementById('card-mindar').classList.toggle('selected', m === 'mindar');
+    document.getElementById('mindar-notice').style.display = m === 'mindar' ? 'block' : 'none';
+    document.getElementById('scan-text').textContent =
+      m === 'hiro' ? 'Apunta al marcador HIRO' : 'Apunta a tu imagen';
+  }
+
+  // ── Iniciar AR ───────────────────────────────────────────────
   function iniciarAR() {
-    document.getElementById('splash').classList.add('hidden');
-    document.getElementById('ar-scene').style.display = 'block';
+    const splash = document.getElementById('splash');
+    splash.classList.add('hidden');
+    setTimeout(() => splash.style.display = 'none', 550);
     document.getElementById('hud').style.display = 'flex';
     document.getElementById('scan-hint').style.display = 'block';
 
-    // Ocultar splash completamente después de la transición
-    setTimeout(() => {
-      document.getElementById('splash').style.display = 'none';
-    }, 700);
+    if (modo === 'hiro') iniciarModoHiro();
+    else iniciarModoMindAR();
   }
-</script>
 
+  // ── Modo HIRO ────────────────────────────────────────────────
+  function iniciarModoHiro() {
+    document.getElementById('scene-arjs').style.display = 'block';
+    const marker = document.getElementById('marker-hiro');
+
+    marker.addEventListener('markerFound', () => {
+      mostrarOverlay(true);
+      actualizarIconAR('ar-icon-hiro');
+      setHudStatus('Marcador detectado ✓', true);
+    });
+    marker.addEventListener('markerLost', () => {
+      mostrarOverlay(false);
+      setHudStatus('Buscando marcador…', false);
+    });
+  }
+
+  // ── Modo MindAR ──────────────────────────────────────────────
+  let mindARStarted = false;
+  function iniciarModoMindAR() {
+    const sceneEl = document.getElementById('scene-mindar');
+    sceneEl.style.display = 'block';
+
+    sceneEl.addEventListener('loaded', () => {
+      if (!mindARStarted) {
+        mindARStarted = true;
+        const sys = sceneEl.systems['mindar-image-system'];
+        if (sys) sys.start();
+      }
+    });
+
+    const target = sceneEl.querySelector('[mindar-image-target]');
+    if (target) {
+      target.addEventListener('targetFound', () => {
+        mostrarOverlay(true);
+        actualizarIconAR('ar-icon-mindar');
+        setHudStatus('Imagen detectada ✓', true);
+      });
+      target.addEventListener('targetLost', () => {
+        mostrarOverlay(false);
+        setHudStatus('Buscando imagen…', false);
+      });
+    }
+  }
+
+  // ── Overlay de conceptos ─────────────────────────────────────
+  function mostrarOverlay(visible) {
+    document.getElementById('concept-overlay').style.display = visible ? 'flex' : 'none';
+    document.getElementById('scan-hint').style.display    = visible ? 'none' : 'block';
+    if (visible) renderConcepto();
+  }
+
+  function renderConcepto() {
+    const c = CONCEPTOS[conceptoActual];
+    document.getElementById('c-title').innerHTML = c.titulo;
+    document.getElementById('c-body').innerHTML  = c.cuerpo;
+    document.getElementById('c-counter').textContent = `${conceptoActual + 1} / ${CONCEPTOS.length}`;
+    document.getElementById('btn-prev').disabled = conceptoActual === 0;
+    document.getElementById('btn-next').disabled = conceptoActual === CONCEPTOS.length - 1;
+
+    document.getElementById('dots').innerHTML = CONCEPTOS.map((_, i) =>
+      `<div class="dot ${i === conceptoActual ? 'active' : ''}"></div>`
+    ).join('');
+  }
+
+  function cambiarConcepto(dir) {
+    const nuevo = conceptoActual + dir;
+    if (nuevo < 0 || nuevo >= CONCEPTOS.length) return;
+    conceptoActual = nuevo;
+    renderConcepto();
+    const iconId = modo === 'hiro' ? 'ar-icon-hiro' : 'ar-icon-mindar';
+    actualizarIconAR(iconId);
+  }
+
+  function actualizarIconAR(id) {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute('value', CONCEPTOS[conceptoActual].icon);
+  }
+
+  function setHudStatus(txt, found) {
+    const el = document.getElementById('hud-status');
+    el.textContent = txt;
+    el.classList.toggle('found', found);
+  }
+
+</script>
 </body>
 </html>
