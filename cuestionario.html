@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cuestionario — AR Economía</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --cyan:   #00d4ff;
+      --purple: #7b2fff;
+      --green:  #00c97a;
+      --red:    #ff3f5e;
+      --gold:   #ffcc00;
+      --bg:     #07080f;
+      --card:   rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.09);
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center;
+    }
+
+    /* ══ HEADER ══════════════════════════════════════════════ */
+    header {
+      width: 100%; max-width: 680px;
+      padding: 28px 20px 0;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .header-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .back-btn {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; color: #888; font-size: 0.8rem;
+      padding: 7px 14px; cursor: pointer; text-decoration: none;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .back-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    h1 {
+      font-size: clamp(1.4rem, 4vw, 2rem); font-weight: 900; letter-spacing: -1px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* Barra de progreso */
+    .progress-wrap {
+      width: 100%; background: rgba(255,255,255,0.07);
+      border-radius: 20px; height: 6px; overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%; border-radius: 20px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      transition: width 0.5s ease;
+    }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.73rem; color: #444; margin-top: 4px;
+    }
+
+    /* Score en vivo */
+    .live-score {
+      font-size: 0.78rem; color: #555;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 14px; white-space: nowrap;
+    }
+    .live-score span { color: var(--gold); font-weight: 700; }
+
+    /* ══ PREGUNTA ════════════════════════════════════════════ */
+    main {
+      width: 100%; max-width: 680px;
+      padding: 24px 20px 40px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .question-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 24px 22px;
+      animation: fadeIn 0.35s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } }
+
+    .q-meta {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--cyan); margin-bottom: 10px;
+    }
+    .q-text {
+      font-size: 1rem; font-weight: 600; line-height: 1.55; color: #f0f0f0;
+    }
+
+    /* ══ OPCIONES ════════════════════════════════════════════ */
+    .options { display: flex; flex-direction: column; gap: 10px; }
+
+    .option-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px; padding: 14px 18px;
+      text-align: left; cursor: pointer;
+      font-size: 0.88rem; color: #ccc;
+      transition: all 0.2s; display: flex; align-items: flex-start; gap: 12px;
+      line-height: 1.5;
+    }
+    .option-btn .opt-letter {
+      min-width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; color: #888;
+      flex-shrink: 0; transition: all 0.2s;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--cyan);
+      background: rgba(0,212,255,0.06);
+      color: #fff;
+    }
+    .option-btn:hover:not(:disabled) .opt-letter {
+      background: rgba(0,212,255,0.2); border-color: var(--cyan); color: var(--cyan);
+    }
+
+    /* Estados tras responder */
+    .option-btn.correct {
+      border-color: var(--green) !important;
+      background: rgba(0,201,122,0.1) !important;
+      color: #fff;
+      animation: correctPulse 0.4s ease;
+    }
+    .option-btn.correct .opt-letter {
+      background: var(--green); border-color: var(--green); color: #000; font-weight: 900;
+    }
+    @keyframes correctPulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    .option-btn.wrong {
+      border-color: var(--red) !important;
+      background: rgba(255,63,94,0.08) !important;
+      color: #888;
+    }
+    .option-btn.wrong .opt-letter {
+      background: rgba(255,63,94,0.3); border-color: var(--red); color: var(--red);
+    }
+
+    .option-btn.dimmed { opacity: 0.35; }
+    .option-btn:disabled { cursor: default; }
+
+    /* ══ FEEDBACK ════════════════════════════════════════════ */
+    .feedback-box {
+      border-radius: 14px; padding: 14px 18px;
+      font-size: 0.83rem; line-height: 1.65;
+      display: none; animation: fadeIn 0.3s ease;
+    }
+    .feedback-box.show { display: block; }
+    .feedback-box.ok {
+      background: rgba(0,201,122,0.08);
+      border: 1px solid rgba(0,201,122,0.3);
+    }
+    .feedback-box.fail {
+      background: rgba(255,63,94,0.07);
+      border: 1px solid rgba(255,63,94,0.25);
+    }
+    .feedback-box .fb-title {
+      font-weight: 800; font-size: 0.9rem; margin-bottom: 5px;
+    }
+    .feedback-box.ok   .fb-title { color: var(--green); }
+    .feedback-box.fail .fb-title { color: var(--red); }
+    .feedback-box .fb-body { color: #aaa; }
+    .feedback-box .fb-body b { color: #ddd; }
+
+    /* ══ BOTÓN SIGUIENTE ════════════════════════════════════ */
+    #btn-next {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border: none; border-radius: 50px;
+      color: #fff; font-size: 0.95rem; font-weight: 700;
+      padding: 14px; cursor: pointer;
+      box-shadow: 0 0 24px rgba(0,212,255,0.2);
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: none;
+    }
+    #btn-next:hover { transform: scale(1.03); box-shadow: 0 0 40px rgba(0,212,255,0.38); }
+
+    /* ══ PANTALLA FINAL ══════════════════════════════════════ */
+    #results {
+      display: none; flex-direction: column; align-items: center;
+      gap: 20px; text-align: center; padding: 40px 20px;
+      animation: fadeIn 0.5s ease;
+      width: 100%; max-width: 680px;
+    }
+
+    .result-circle {
+      width: 130px; height: 130px; border-radius: 50%;
+      background: conic-gradient(var(--cyan) 0%, var(--purple) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem; font-weight: 900; color: #fff;
+      box-shadow: 0 0 50px rgba(0,212,255,0.3);
+      position: relative;
+    }
+    .result-circle::before {
+      content: '';
+      position: absolute; inset: 6px;
+      background: var(--bg); border-radius: 50%;
+    }
+    .result-circle span { position: relative; z-index: 1; }
+
+    .result-msg { font-size: 1.4rem; font-weight: 900; }
+    .result-sub { color: #666; font-size: 0.9rem; max-width: 320px; line-height: 1.6; }
+
+    /* Desglose por categoría */
+    .result-breakdown {
+      width: 100%; background: var(--card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 20px; text-align: left;
+    }
+    .result-breakdown h3 { font-size: 0.8rem; color: #555; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; }
+    .breakdown-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .breakdown-label { font-size: 0.82rem; flex: 1; color: #aaa; }
+    .breakdown-bar-wrap { flex: 2; background: rgba(255,255,255,0.06); border-radius: 10px; height: 8px; overflow: hidden; }
+    .breakdown-bar { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--cyan), var(--purple)); transition: width 0.8s ease; }
+    .breakdown-score { font-size: 0.75rem; color: #555; width: 36px; text-align: right; }
+
+    .result-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .btn-retry {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      border: none; border-radius: 50px; color: #fff;
+      font-size: 0.95rem; font-weight: 700; padding: 13px 36px;
+      cursor: pointer; transition: transform 0.2s;
+    }
+    .btn-retry:hover { transform: scale(1.04); }
+    .btn-ar {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 50px; color: #aaa;
+      font-size: 0.95rem; font-weight: 600; padding: 13px 36px;
+      text-decoration: none; transition: all 0.2s;
+    }
+    .btn-ar:hover { border-color: var(--cyan); color: var(--cyan); }
+  </style>
+</head>
+<body>
+
+<!-- ═════════════════════════ HEADER ══════════════════════════ -->
+<header>
+  <div class="header-top">
+    <a class="back-btn" href="index.html">← AR</a>
+    <h1>📝 Cuestionario</h1>
+    <div class="live-score">✓ <span id="score-live">0</span> correctas</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+  </div>
+  <div class="progress-label">
+    <span id="progress-label">Pregunta 1 de 22</span>
+    <span id="progress-pct">0%</span>
+  </div>
+</header>
+
+<!-- ═════════════════════════ PREGUNTA ════════════════════════ -->
+<main id="quiz-main">
+  <div class="question-card" id="question-card">
+    <div class="q-meta" id="q-meta"></div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+
+  <div class="options" id="options-container"></div>
+
+  <div class="feedback-box" id="feedback"></div>
+
+  <button id="btn-next" onclick="siguientePregunta()">Siguiente pregunta →</button>
+</main>
+
+<!-- ═════════════════════════ RESULTADOS ══════════════════════ -->
+<div id="results">
+  <div class="result-circle"><span id="result-pct">0%</span></div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="result-sub" id="result-sub"></div>
+
+  <div class="result-breakdown" id="breakdown"></div>
+
+  <div class="result-actions">
+    <button class="btn-retry" onclick="reiniciar()">🔄 Intentar de nuevo</button>
+    <a class="btn-ar" href="index.html">📷 Volver al AR</a>
+  </div>
+</div>
+
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  BANCO DE PREGUNTAS — 22 preguntas (una por concepto)
+// ════════════════════════════════════════════════════════════════
+const PREGUNTAS = [
+  {
+    categoria: "🔍 Tipos de Problemas",
+    pregunta: "¿Cómo se define un 'problema' en el contexto económico y social?",
+    correcta: "Situación con una dificultad o necesidad que requiere solución técnica, social o económica.",
+    distractores: [
+      "Cualquier desacuerdo entre dos o más personas dentro de una organización.",
+      "Un fenómeno natural que afecta la producción de bienes en una región.",
+      "La falta de dinero en efectivo dentro de un sistema económico dado."
+    ],
+    feedback: `Un <b>problema</b> es una situación en la que existe una dificultad o necesidad que requiere solución. Puede ser de naturaleza <b>técnica</b> (cómo hacer algo), <b>social</b> o <b>económica</b> (cómo usar recursos escasos).`
+  },
+  {
+    categoria: "🔍 Tipos de Problemas",
+    pregunta: "Un ingeniero necesita encontrar la manera más eficiente de construir un puente con los materiales disponibles. ¿Qué tipo de problema enfrenta?",
+    correcta: "Un problema técnico, porque se relaciona con los procedimientos y medios para lograr un fin.",
+    distractores: [
+      "Un problema económico, porque los recursos siempre son escasos en la construcción.",
+      "Un problema social, porque el puente afectará a la comunidad local.",
+      "Un problema científico, porque requiere investigación experimental."
+    ],
+    feedback: `El <b>problema técnico</b> se refiere al <b>cómo hacer</b> algo: los medios, procedimientos o tecnología disponibles. Que los recursos sean escasos no convierte el problema en económico si el foco es el método constructivo.`
+  },
+  {
+    categoria: "🔍 Tipos de Problemas",
+    pregunta: "¿Cuál es la característica esencial que define un problema económico?",
+    correcta: "La tensión entre recursos limitados y necesidades ilimitadas que obliga a tomar decisiones.",
+    distractores: [
+      "La dificultad para encontrar mano de obra calificada en el mercado laboral.",
+      "El desacuerdo entre productores y consumidores sobre el precio de un bien.",
+      "La existencia de bienes que no tienen precio en el mercado libre."
+    ],
+    feedback: `El <b>problema económico</b> surge precisamente de la tensión entre <b>recursos escasos</b> y <b>necesidades ilimitadas</b>. Toda sociedad debe decidir qué producir, cómo y para quién — esa necesidad de elegir es el núcleo del problema económico.`
+  },
+  {
+    categoria: "📦 Escasez y Costo",
+    pregunta: "¿Qué significa la 'escasez' como condición básica de la economía?",
+    correcta: "Que los recursos disponibles no son suficientes para satisfacer todas las necesidades humanas.",
+    distractores: [
+      "Que un país no tiene acceso a materias primas por falta de tecnología.",
+      "Que los precios de los bienes aumentan de manera sostenida en el tiempo.",
+      "Que existe desigualdad en la distribución de la riqueza entre clases sociales."
+    ],
+    feedback: `La <b>escasez</b> no es sinónimo de pobreza. Es una condición universal: los recursos (tiempo, dinero, materiales) son finitos, pero las necesidades y deseos humanos son infinitos. Esto obliga a tomar decisiones de asignación.`
+  },
+  {
+    categoria: "📦 Escasez y Costo",
+    pregunta: "María decide estudiar una maestría en lugar de aceptar un empleo que le ofrecen. ¿Qué representa el salario que deja de percibir?",
+    correcta: "El costo de oportunidad de su decisión de estudiar.",
+    distractores: [
+      "Un gasto directo que debe incluir en su presupuesto de estudios.",
+      "Una pérdida económica que el gobierno debería compensarle.",
+      "Un bien económico al que renunció por causas externas a su control."
+    ],
+    feedback: `El <b>costo de oportunidad</b> es el valor de la <b>mejor alternativa a la que se renuncia</b> al tomar una decisión. En este caso, el salario perdido es exactamente el costo de oportunidad de elegir estudiar.`
+  },
+  {
+    categoria: "📦 Escasez y Costo",
+    pregunta: "¿Cuáles son los cuatro tipos principales de recursos productivos?",
+    correcta: "Tierra, trabajo, capital y organización.",
+    distractores: [
+      "Dinero, maquinaria, personal y tiempo de producción.",
+      "Oferta, demanda, precio y utilidad marginal.",
+      "Bienes, servicios, moneda y tecnología digital."
+    ],
+    feedback: `Los <b>recursos productivos</b> se clasifican en: <b>Tierra</b> (recursos naturales), <b>Trabajo</b> (esfuerzo humano), <b>Capital</b> (maquinaria, herramientas, dinero) y <b>Organización</b> (gestión y coordinación empresarial).`
+  },
+  {
+    categoria: "🧠 Necesidades",
+    pregunta: "¿Cuál de las siguientes es una característica correcta de las necesidades humanas?",
+    correcta: "Son ilimitadas y varían según la persona y la sociedad.",
+    distractores: [
+      "Son fijas e iguales para todos los seres humanos en cualquier cultura.",
+      "Disminuyen progresivamente conforme aumenta el nivel de ingresos.",
+      "Solo pueden ser satisfechas mediante bienes materiales tangibles."
+    ],
+    feedback: `Las <b>necesidades</b> tienen tres características clave: son <b>ilimitadas</b> (siempre surgen nuevas), <b>cambian con el tiempo</b> y <b>varían según la persona y la sociedad</b>. Por eso no pueden ser todas satisfechas con recursos finitos.`
+  },
+  {
+    categoria: "🧠 Necesidades",
+    pregunta: "Tener acceso a internet y educación universitaria ¿en qué categoría de necesidades se ubica principalmente?",
+    correcta: "Necesidades secundarias, que mejoran la calidad de vida.",
+    distractores: [
+      "Necesidades primarias, porque son indispensables para sobrevivir hoy.",
+      "Necesidades terciarias, porque representan lujos sociales.",
+      "No son necesidades económicas porque el conocimiento es un bien libre."
+    ],
+    feedback: `Las <b>necesidades secundarias</b> son aquellas que van más allá de la supervivencia y <b>mejoran la calidad de vida</b>: educación, entretenimiento, comunicación. Las <b>primarias</b> son solo las básicas para sobrevivir (alimentación, vivienda, salud).`
+  },
+  {
+    categoria: "🏷️ Bienes",
+    pregunta: "Para que algo sea considerado un 'bien' en economía, ¿qué condiciones debe cumplir?",
+    correcta: "Debe ser un objeto material que satisfaga una necesidad humana y tenga utilidad.",
+    distractores: [
+      "Debe ser producido por el Estado y distribuido gratuitamente a la población.",
+      "Debe tener un precio fijado por el mercado y ser de consumo masivo.",
+      "Debe ser un recurso natural no renovable con demanda en el mercado global."
+    ],
+    feedback: `Un <b>bien</b> es todo objeto material que <b>satisface una necesidad humana</b> y tiene <b>utilidad</b>. No requiere necesariamente tener precio (los bienes libres también son bienes), pero sí debe ser tangible y útil.`
+  },
+  {
+    categoria: "🏷️ Bienes",
+    pregunta: "¿Cuál de los siguientes ejemplos corresponde a un bien libre?",
+    correcta: "El aire que respiramos en condiciones normales.",
+    distractores: [
+      "Un libro de texto universitario disponible en la biblioteca.",
+      "El agua embotellada disponible en cualquier tienda.",
+      "La energía eléctrica generada por paneles solares domésticos."
+    ],
+    feedback: `Un <b>bien libre</b> es abundante, no tiene costo ni precio de mercado. El <b>aire</b> cumple esta condición en condiciones normales. El agua embotellada, la electricidad y los libros requieren esfuerzo o recursos para obtenerse, por lo que son bienes económicos.`
+  },
+  {
+    categoria: "🏷️ Bienes",
+    pregunta: "¿Qué caracteriza a un bien económico frente a un bien libre?",
+    correcta: "Es escaso y tiene valor y precio porque requiere recursos para obtenerse.",
+    distractores: [
+      "Es producido exclusivamente por empresas privadas con fines de lucro.",
+      "Puede sustituirse fácilmente por otro bien sin pérdida de utilidad.",
+      "Es un bien intangible que solo existe en formato digital o virtual."
+    ],
+    feedback: `El <b>bien económico</b> se distingue por su <b>escasez relativa</b>: obtenerlo requiere esfuerzo, tecnología o recursos, lo que le otorga <b>valor de cambio</b> en el mercado. La mayoría de lo que compramos son bienes económicos.`
+  },
+  {
+    categoria: "⚙️ Producto y Servicio",
+    pregunta: "¿Qué es un producto en el contexto económico?",
+    correcta: "El resultado de un proceso productivo; puede ser un bien material o un servicio.",
+    distractores: [
+      "Exclusivamente el bien físico que sale de una fábrica o taller.",
+      "El dinero que obtiene una empresa al vender sus bienes en el mercado.",
+      "La materia prima transformada antes de llegar al consumidor final."
+    ],
+    feedback: `Un <b>producto</b> es el <b>resultado de un proceso productivo</b> y puede ser tanto un bien <b>tangible</b> (un automóvil) como un servicio <b>intangible</b> (una consulta médica). No se limita solo a objetos físicos.`
+  },
+  {
+    categoria: "⚙️ Producto y Servicio",
+    pregunta: "¿Cuál de las siguientes es una característica distintiva de los servicios?",
+    correcta: "Son intangibles y generalmente se producen y consumen al mismo tiempo.",
+    distractores: [
+      "Pueden almacenarse y transportarse igual que los bienes físicos.",
+      "Solo son prestados por el sector público o instituciones sin fines de lucro.",
+      "Siempre requieren la presencia de bienes materiales para poder ofrecerse."
+    ],
+    feedback: `Los <b>servicios</b> son intangibles (no puedes tocarlos), se producen y consumen simultáneamente y no pueden almacenarse. Ejemplos: transporte, educación, salud, banca. Cualquier empresa privada o pública puede prestarlos.`
+  },
+  {
+    categoria: "⚙️ Producto y Servicio",
+    pregunta: "¿Por qué el software se considera un bien económico o servicio, a pesar de no ser tangible?",
+    correcta: "Porque tiene valor, satisface necesidades y requiere recursos para producirse.",
+    distractores: [
+      "Porque está protegido por leyes de propiedad intelectual en todos los países.",
+      "Porque puede descargarse gratuitamente, lo que lo hace un bien libre digital.",
+      "Porque solo lo producen grandes empresas tecnológicas con capital intensivo."
+    ],
+    feedback: `El <b>software</b> cumple los criterios de bien económico: <b>tiene valor</b> (la gente paga por él), <b>satisface necesidades</b> (comunicación, trabajo, entretenimiento) y <b>requiere recursos</b> (programadores, tiempo, infraestructura) para producirse.`
+  },
+  {
+    categoria: "💲 Valores Económicos",
+    pregunta: "¿Qué mide el 'valor de uso' de un bien o servicio?",
+    correcta: "La capacidad del bien para satisfacer una necesidad humana.",
+    distractores: [
+      "El precio que tiene el bien en el mercado en un momento determinado.",
+      "La cantidad de trabajo necesaria para producir el bien según Marx.",
+      "El beneficio económico que obtiene el productor al venderlo."
+    ],
+    feedback: `El <b>valor de uso</b> es subjetivo: mide qué tan útil es un bien para satisfacer una necesidad. El agua tiene enorme valor de uso (es esencial para vivir) pero puede tener poco valor de cambio si es abundante — esto es la famosa <b>paradoja del valor</b>.`
+  },
+  {
+    categoria: "💲 Valores Económicos",
+    pregunta: "Un diamante tiene alto precio en el mercado, aunque su utilidad práctica sea menor que la del agua. ¿Qué concepto explica este precio?",
+    correcta: "El valor de cambio, que determina cuánto vale un bien en el mercado.",
+    distractores: [
+      "El costo de oportunidad, por el esfuerzo de extraerlo de la tierra.",
+      "La escasez técnica, porque los diamantes son difíciles de fabricar.",
+      "El valor de uso, porque los diamantes satisfacen necesidades estéticas."
+    ],
+    feedback: `El <b>valor de cambio</b> refleja cuánto vale un bien en el mercado y depende de la <b>oferta, la demanda y la escasez</b>. Los diamantes tienen alto valor de cambio por su escasez, independientemente de su valor de uso práctico.`
+  },
+  {
+    categoria: "🔄 Actos y Actividades",
+    pregunta: "¿Qué es un acto económico?",
+    correcta: "Una acción consciente del ser humano orientada a satisfacer necesidades usando recursos escasos.",
+    distractores: [
+      "Cualquier transacción financiera registrada por el sistema bancario.",
+      "Una decisión del gobierno para regular el mercado y controlar precios.",
+      "El proceso de intercambio de bienes entre dos países mediante tratados."
+    ],
+    feedback: `El <b>acto económico</b> es la unidad mínima de la economía: cualquier decisión <b>consciente</b> orientada a satisfacer necesidades con recursos escasos. Comprar, ahorrar, producir, invertir — todos son actos económicos individuales.`
+  },
+  {
+    categoria: "🔄 Actos y Actividades",
+    pregunta: "¿Cuáles son los tres grandes procesos que conforman la actividad económica?",
+    correcta: "Producción, distribución y consumo de bienes y servicios.",
+    distractores: [
+      "Importación, exportación y regulación de mercados internacionales.",
+      "Ahorro, inversión y gasto gubernamental en infraestructura.",
+      "Oferta, demanda y determinación del precio de equilibrio."
+    ],
+    feedback: `La <b>actividad económica</b> abarca: <b>Producción</b> (crear bienes y servicios), <b>Distribución</b> (hacerlos llegar a quienes los necesitan) y <b>Consumo</b> (usarlos para satisfacer necesidades). Estos tres procesos son interdependientes.`
+  },
+  {
+    categoria: "🔬 Ciencias",
+    pregunta: "¿Cuál es la característica que define a la ciencia como forma de conocimiento?",
+    correcta: "Es un conjunto de conocimientos organizados, comprobables y que explican fenómenos reales.",
+    distractores: [
+      "Es el conjunto de creencias y tradiciones que una sociedad transmite generacionalmente.",
+      "Es cualquier habilidad práctica que permite realizar una tarea de manera eficiente.",
+      "Es el registro histórico de descubrimientos realizados por laboratorios acreditados."
+    ],
+    feedback: `La <b>ciencia</b> se distingue por ser <b>sistemática</b> (organizada), <b>verificable</b> (comprobable), <b>objetiva</b> y <b>acumulativa</b>. Se divide en ciencias <b>formales</b> (matemáticas, lógica) y <b>fácticas</b> (economía, física, biología).`
+  },
+  {
+    categoria: "🔬 Ciencias",
+    pregunta: "¿En qué se diferencia la ciencia formal de la ciencia fáctica?",
+    correcta: "La formal estudia sistemas abstractos sin basarse en experiencia; la fáctica estudia hechos reales mediante observación.",
+    distractores: [
+      "La formal se aplica en la industria y la fáctica solo en la academia universitaria.",
+      "La formal usa experimentos de laboratorio y la fáctica usa modelos matemáticos.",
+      "La formal fue desarrollada antes del siglo XX y la fáctica es más reciente."
+    ],
+    feedback: `<b>Ciencia formal</b> (matemáticas, lógica): estudia sistemas abstractos, sus verdades son necesarias y universales. <b>Ciencia fáctica</b> (economía, física, sociología): estudia hechos reales con observación y experimentación; sus conclusiones son provisionales.`
+  },
+  {
+    categoria: "🛠️ Técnica e Ingeniería",
+    pregunta: "¿Cómo se diferencia la técnica de la ciencia?",
+    correcta: "La técnica aplica conocimiento para realizar actividades eficientemente; la ciencia genera nuevo conocimiento.",
+    distractores: [
+      "La técnica solo se usa en ingeniería, mientras la ciencia aplica en todas las disciplinas.",
+      "La técnica es más avanzada que la ciencia porque produce resultados concretos.",
+      "La técnica se enseña en universidades y la ciencia en institutos tecnológicos."
+    ],
+    feedback: `La <b>técnica</b> es práctica y aplicada: busca resultados concretos usando conocimiento (a veces empírico). La <b>ciencia</b> busca <b>generar</b> conocimiento nuevo y explicar fenómenos. La ingeniería une ambas para resolver problemas reales.`
+  },
+  {
+    categoria: "🛠️ Técnica e Ingeniería",
+    pregunta: "¿Qué hace que la ingeniería sea distinta de aplicar simplemente técnica o ciencia por separado?",
+    correcta: "Une conocimientos científicos y técnicos para diseñar soluciones prácticas a problemas reales.",
+    distractores: [
+      "Se enfoca exclusivamente en la construcción de infraestructura física y civil.",
+      "Solo aplica matemáticas avanzadas sin considerar el contexto social o económico.",
+      "Es una ciencia fáctica que estudia el comportamiento de los materiales."
+    ],
+    feedback: `La <b>ingeniería</b> es la integración de <b>ciencia</b> (conocimiento) + <b>técnica</b> (habilidad procedimental) para resolver problemas reales. Transforma recursos productivos en productos y servicios que satisfacen necesidades humanas — conecta directamente con la economía.`
+  },
+];
+// ════════════════════════════════════════════════════════════════
+
+// Estado del cuestionario
+let preguntas = [];
+let actual = 0;
+let correctas = 0;
+let respondida = false;
+const porCategoria = {};
+
+// ── Barajar array ────────────────────────────────────────────────
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+// ── Inicializar ──────────────────────────────────────────────────
+function init() {
+  preguntas = shuffle(PREGUNTAS);
+  actual = 0; correctas = 0; respondida = false;
+
+  // Reset categorías
+  preguntas.forEach(p => { porCategoria[p.categoria] = { total: 0, ok: 0 }; });
+  preguntas.forEach(p => porCategoria[p.categoria].total++);
+
+  document.getElementById('quiz-main').style.display = 'flex';
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('score-live').textContent = '0';
+
+  mostrarPregunta();
+}
+
+// ── Mostrar pregunta ─────────────────────────────────────────────
+function mostrarPregunta() {
+  respondida = false;
+  const p = preguntas[actual];
+
+  // Meta y texto
+  document.getElementById('q-meta').textContent = p.categoria;
+  document.getElementById('q-text').textContent = p.pregunta;
+
+  // Feedback oculto
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-box';
+  fb.innerHTML = '';
+
+  // Botón siguiente oculto
+  document.getElementById('btn-next').style.display = 'none';
+
+  // Opciones (barajadas)
+  const opciones = shuffle([
+    { texto: p.correcta, esCorrecta: true },
+    ...p.distractores.map(d => ({ texto: d, esCorrecta: false }))
+  ]);
+
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  const letras = ['A', 'B', 'C', 'D'];
+
+  opciones.forEach((op, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letras[i]}</span><span>${op.texto}</span>`;
+    btn.onclick = () => responder(btn, op.esCorrecta, opciones, p.feedback);
+    container.appendChild(btn);
+  });
+
+  // Progreso
+  const pct = Math.round((actual / preguntas.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `Pregunta ${actual + 1} de ${preguntas.length}`;
+  document.getElementById('progress-pct').textContent = pct + '%';
+
+  // Animar card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight; // reflow
+  card.style.animation = 'fadeIn 0.35s ease';
+}
+
+// ── Responder ────────────────────────────────────────────────────
+function responder(btn, esCorrecta, opciones, feedbackTexto) {
+  if (respondida) return;
+  respondida = true;
+
+  const btns = document.querySelectorAll('.option-btn');
+  const p = preguntas[actual];
+
+  btns.forEach(b => {
+    b.disabled = true;
+    const texto = b.querySelector('span:last-child').textContent;
+    const esEsta = opciones.find(o => o.texto === texto);
+    if (esEsta?.esCorrecta) {
+      b.classList.add('correct');
+    } else if (b === btn && !esCorrecta) {
+      b.classList.add('wrong');
+    } else {
+      b.classList.add('dimmed');
+    }
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedback');
+  if (esCorrecta) {
+    correctas++;
+    porCategoria[p.categoria].ok++;
+    fb.className = 'feedback-box ok show';
+    fb.innerHTML = `<div class="fb-title">✅ ¡Correcto!</div><div class="fb-body">${feedbackTexto}</div>`;
+  } else {
+    fb.className = 'feedback-box fail show';
+    fb.innerHTML = `<div class="fb-title">❌ Incorrecto</div><div class="fb-body">${feedbackTexto}</div>`;
+  }
+
+  document.getElementById('score-live').textContent = correctas;
+  document.getElementById('btn-next').style.display = 'block';
+  document.getElementById('btn-next').textContent =
+    actual < preguntas.length - 1 ? 'Siguiente pregunta →' : 'Ver resultados →';
+}
+
+// ── Siguiente ────────────────────────────────────────────────────
+function siguientePregunta() {
+  actual++;
+  if (actual < preguntas.length) {
+    mostrarPregunta();
+  } else {
+    mostrarResultados();
+  }
+}
+
+// ── Resultados ───────────────────────────────────────────────────
+function mostrarResultados() {
+  document.getElementById('quiz-main').style.display = 'none';
+  const res = document.getElementById('results');
+  res.style.display = 'flex';
+
+  const pct = Math.round((correctas / preguntas.length) * 100);
+  document.getElementById('progress-bar').style.width = '100%';
+  document.getElementById('progress-label').textContent = `Completado`;
+  document.getElementById('progress-pct').textContent = '100%';
+  document.getElementById('result-pct').textContent = pct + '%';
+
+  // Mensaje según puntuación
+  let msg, sub;
+  if (pct === 100) {
+    msg = '🏆 ¡Perfecto!';
+    sub = 'Dominas todos los conceptos de economía. ¡Excelente trabajo!';
+  } else if (pct >= 80) {
+    msg = '🌟 ¡Muy bien!';
+    sub = 'Tienes un sólido dominio del tema. Repasa los conceptos fallados.';
+  } else if (pct >= 60) {
+    msg = '📚 Bien encaminado';
+    sub = 'Vas por buen camino. Te recomendamos repasar en el AR los temas fallados.';
+  } else if (pct >= 40) {
+    msg = '💪 Sigue practicando';
+    sub = 'Hay conceptos que necesitas reforzar. El modo AR puede ayudarte.';
+  } else {
+    msg = '🔄 ¡A repasar!';
+    sub = 'Te recomendamos revisar todos los conceptos en el modo AR antes de reintentar.';
+  }
+
+  document.getElementById('result-msg').textContent = msg;
+  document.getElementById('result-sub').textContent = sub;
+
+  // Desglose por categoría
+  const bd = document.getElementById('breakdown');
+  bd.innerHTML = '<h3>Resultados por categoría</h3>';
+  Object.entries(porCategoria).forEach(([cat, data]) => {
+    if (data.total === 0) return;
+    const catPct = Math.round((data.ok / data.total) * 100);
+    bd.innerHTML += `
+      <div class="breakdown-row">
+        <div class="breakdown-label">${cat}</div>
+        <div class="breakdown-bar-wrap">
+          <div class="breakdown-bar" style="width:${catPct}%"></div>
+        </div>
+        <div class="breakdown-score">${data.ok}/${data.total}</div>
+      </div>`;
+  });
+}
+
+// ── Reiniciar ────────────────────────────────────────────────────
+function reiniciar() { init(); }
+
+// ── Arrancar ─────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
