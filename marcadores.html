@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Marcadores AR – Economía</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(90deg, #00d4ff, #7b2fff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center; color: #888; margin-bottom: 48px; font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+      max-width: 900px;
+      margin: 0 auto 60px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 28px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); }
+    .card h2 { font-size: 1.1rem; margin-bottom: 4px; color: #fff; }
+    .card .concept { color: #00d4ff; font-size: 0.85rem; margin-bottom: 20px; }
+    .card img {
+      width: 200px; height: 200px;
+      border-radius: 12px;
+      background: #fff;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .card p { color: #888; font-size: 0.82rem; line-height: 1.6; }
+    .badge {
+      display: inline-block;
+      background: rgba(123,47,255,0.2);
+      border: 1px solid rgba(123,47,255,0.5);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.75rem;
+      color: #ccc;
+      margin-bottom: 14px;
+    }
+
+    .print-btn {
+      display: block;
+      margin: 0 auto 48px;
+      background: linear-gradient(135deg, #00d4ff, #7b2fff);
+      border: none; border-radius: 50px;
+      color: #fff; font-size: 1rem; font-weight: 700;
+      padding: 13px 40px; cursor: pointer;
+      box-shadow: 0 0 30px rgba(0,212,255,0.3);
+      transition: transform 0.2s;
+    }
+    .print-btn:hover { transform: scale(1.05); }
+
+    .instructions {
+      max-width: 700px; margin: 0 auto;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 28px 32px;
+    }
+    .instructions h3 { color: #00d4ff; margin-bottom: 16px; font-size: 1rem; }
+    .instructions ol { padding-left: 20px; color: #aaa; line-height: 2; font-size: 0.9rem; }
+    .instructions ol li strong { color: #fff; }
+
+    .back-link {
+      display: block; text-align: center; margin-top: 40px;
+      color: #7b2fff; text-decoration: none; font-weight: 600;
+    }
+    .back-link:hover { color: #00d4ff; }
+
+    @media print {
+      body { background: white; color: black; padding: 0; }
+      h1, .subtitle, .print-btn, .instructions, .back-link, .concept, .badge, p { display: none !important; }
+      .card { border: none; background: none; break-inside: avoid; }
+      .card h2 { display: block; color: black; font-size: 1rem; margin-bottom: 8px; }
+      .grid { gap: 0; }
+      .card img { width: 240px; height: 240px; border: 2px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📄 Marcadores AR</h1>
+  <p class="subtitle">Imprime estos marcadores y apunta la cámara para ver los conceptos en AR</p>
+
+  <button class="print-btn" onclick="window.print()">🖨️ Imprimir marcadores</button>
+
+  <div class="grid">
+
+    <!-- Marcador 1: HIRO -->
+    <div class="card">
+      <h2>Marcador HIRO</h2>
+      <div class="concept">📈 Oferta y Demanda</div>
+      <span class="badge">Concepto 1</span><br>
+      <img
+        src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/HIRO.jpg"
+        alt="Marcador HIRO"
+        onerror="this.src='https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg'"
+      />
+      <p>Apunta la cámara a este cuadro negro para ver el panel de Oferta y Demanda.</p>
+    </div>
+
+    <!-- Marcador 2: KANJI -->
+    <div class="card">
+      <h2>Marcador KANJI</h2>
+      <div class="concept">💸 Inflación</div>
+      <span class="badge">Concepto 2</span><br>
+      <img
+        src="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/KANJI.jpg"
+        alt="Marcador KANJI"
+        onerror="this.src='https://jeromeetienne.github.io/AR.js/data/images/KANJI.jpg'"
+      />
+      <p>Apunta la cámara a este cuadro negro para ver el panel de Inflación.</p>
+    </div>
+
+    <!-- Marcador 3: PLACEHOLDER -->
+    <!--
+    <div class="card">
+      <h2>Marcador LETTERF</h2>
+      <div class="concept">📊 Tu concepto aquí</div>
+      <span class="badge">Concepto 3</span><br>
+      <img src="URL_DEL_MARCADOR" alt="Marcador" />
+      <p>Descripción del concepto.</p>
+    </div>
+    -->
+
+  </div>
+
+  <div class="instructions">
+    <h3>🧭 ¿Cómo usar los marcadores?</h3>
+    <ol>
+      <li><strong>Imprime</strong> esta página (botón arriba o Ctrl+P)</li>
+      <li>Recorta cada marcador dejando el borde blanco completo</li>
+      <li>Abre el enlace del proyecto en tu celular</li>
+      <li>Pulsa <strong>"Iniciar Cámara"</strong> y acepta los permisos</li>
+      <li>Apunta la cámara al marcador desde unos <strong>20-30 cm</strong> de distancia</li>
+      <li>Espera 1-2 segundos — ¡el panel flotará sobre el marcador!</li>
+    </ol>
+  </div>
+
+  <a class="back-link" href="index.html">← Volver a la experiencia AR</a>
+
+</body>
+</html>
