@@ -324,9 +324,9 @@
 <!-- ═══════════════════════ MODO A — AR.js + HIRO ═══════════ -->
 <a-scene id="scene-arjs"
   embedded
-  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; patternRatio: 0.75; maxDetectionRate: 60;"
   vr-mode-ui="enabled: false"
-  renderer="logarithmicDepthBuffer: true; antialias: true;">
+  renderer="antialias: true; alpha: true;">
 
   <a-marker preset="hiro" id="marker-hiro">
 
@@ -362,31 +362,8 @@
 
 
 <!-- ═══════════════════════ MODO B — MindAR ═════════════════ -->
-<a-scene id="scene-mindar"
-  mindar-image="imageTargetSrc: marcador.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes;"
-  color-space="sRGB" renderer="colorManagement: true"
-  vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-
-  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-  <a-entity mindar-image-target="targetIndex: 0">
-    <a-cylinder color="#7b2fff" opacity="0.12" radius="0.65" height="0.03"
-      animation="property: rotation; to: 0 360 0; dur: 9000; loop: true; easing: linear">
-    </a-cylinder>
-    <a-text id="ar-icon-mindar" value="🔍"
-      align="center" width="3" position="0 0.5 0" scale="1.6 1.6 1.6">
-    </a-text>
-    <a-torus color="#00d4ff" opacity="0.45" radius="0.82" radius-tubular="0.02"
-      animation="property: rotation; to: 0 360 0; dur: 11000; loop: true; easing: linear">
-    </a-torus>
-    <a-entity animation="property: rotation; to: 0 360 0; dur: 5200; loop: true; easing: linear">
-      <a-sphere color="#7b2fff" radius="0.058" position="0.88 0.28 0" opacity="0.85"></a-sphere>
-    </a-entity>
-    <a-entity animation="property: rotation; to: 0 -360 0; dur: 7800; loop: true; easing: linear">
-      <a-sphere color="#ffcc00" radius="0.05" position="0.74 0.42 0" opacity="0.8"></a-sphere>
-    </a-entity>
-  </a-entity>
-</a-scene>
+<!-- Se inyecta en el DOM solo si el usuario elige este modo  -->
+<div id="mindar-container" style="display:none; position:fixed; inset:0; z-index:1;"></div>
 
 
 <!-- ═══════════════════════ JAVASCRIPT ══════════════════════ -->
@@ -730,27 +707,71 @@ function iniciarModoHiro() {
 // ── Modo MindAR ──────────────────────────────────────────────────
 let mindARStarted = false;
 function iniciarModoMindAR() {
-  const sceneEl = document.getElementById('scene-mindar');
-  sceneEl.style.display = 'block';
-  sceneEl.addEventListener('loaded', () => {
-    if (!mindARStarted) {
-      mindARStarted = true;
-      const sys = sceneEl.systems['mindar-image-system'];
-      if (sys) sys.start();
-    }
-  });
-  const target = sceneEl.querySelector('[mindar-image-target]');
-  if (target) {
-    target.addEventListener('targetFound', () => {
-      mostrarOverlay(true);
-      actualizarIconAR('ar-icon-mindar');
-      setHudStatus('Imagen detectada ✓', true);
-    });
-    target.addEventListener('targetLost', () => {
-      mostrarOverlay(false);
-      setHudStatus('Buscando imagen…', false);
-    });
+  const container = document.getElementById('mindar-container');
+  container.style.display = 'block';
+
+  // Inyectar la escena solo la primera vez
+  if (!mindARStarted) {
+    mindARStarted = true;
+    container.innerHTML = `
+      <a-scene id="scene-mindar"
+        mindar-image="imageTargetSrc: marcador.mind; autoStart: false; uiLoading: yes; uiScanning: yes; uiError: yes;"
+        color-space="sRGB" renderer="colorManagement: true"
+        vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
+        style="position:fixed;inset:0;width:100%;height:100%;">
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-entity mindar-image-target="targetIndex: 0">
+          <a-cylinder color="#7b2fff" opacity="0.12" radius="0.65" height="0.03"
+            animation="property: rotation; to: 0 360 0; dur: 9000; loop: true; easing: linear">
+          </a-cylinder>
+          <a-text id="ar-icon-mindar" value="🔍"
+            align="center" width="3" position="0 0.5 0" scale="1.6 1.6 1.6">
+          </a-text>
+          <a-torus color="#00d4ff" opacity="0.45" radius="0.82" radius-tubular="0.02"
+            animation="property: rotation; to: 0 360 0; dur: 11000; loop: true; easing: linear">
+          </a-torus>
+          <a-entity animation="property: rotation; to: 0 360 0; dur: 5200; loop: true; easing: linear">
+            <a-sphere color="#7b2fff" radius="0.058" position="0.88 0.28 0" opacity="0.85"></a-sphere>
+          </a-entity>
+          <a-entity animation="property: rotation; to: 0 -360 0; dur: 7800; loop: true; easing: linear">
+            <a-sphere color="#ffcc00" radius="0.05" position="0.74 0.42 0" opacity="0.8"></a-sphere>
+          </a-entity>
+        </a-entity>
+      </a-scene>`;
+
+    // Esperar a que la escena esté lista para arrancarla
+    const checkReady = setInterval(() => {
+      const sceneEl = document.getElementById('scene-mindar');
+      if (sceneEl && sceneEl.hasLoaded) {
+        clearInterval(checkReady);
+        const sys = sceneEl.systems['mindar-image-system'];
+        if (sys) sys.start();
+        attachMindAREvents(sceneEl);
+      } else if (sceneEl) {
+        sceneEl.addEventListener('loaded', () => {
+          clearInterval(checkReady);
+          const sys = sceneEl.systems['mindar-image-system'];
+          if (sys) sys.start();
+          attachMindAREvents(sceneEl);
+        }, { once: true });
+        clearInterval(checkReady);
+      }
+    }, 200);
   }
+}
+
+function attachMindAREvents(sceneEl) {
+  const target = sceneEl.querySelector('[mindar-image-target]');
+  if (!target) return;
+  target.addEventListener('targetFound', () => {
+    mostrarOverlay(true);
+    actualizarIconAR('ar-icon-mindar');
+    setHudStatus('Imagen detectada ✓', true);
+  });
+  target.addEventListener('targetLost', () => {
+    mostrarOverlay(false);
+    setHudStatus('Buscando imagen…', false);
+  });
 }
 
 // ── Overlay de conceptos ─────────────────────────────────────────
